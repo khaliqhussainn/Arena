@@ -22,12 +22,16 @@ row and become the category's permanent Champion.
 2. **Create a Supabase project**
 
    - Go to [supabase.com](https://supabase.com) → New project (free tier).
-   - In the SQL editor, run `supabase/migrations/0001_init.sql` — this creates
-     all six tables (`products`, `matches`, `votes`, `champions`,
+   - In the SQL editor, run `supabase/migrations/0001_init.sql` then
+     `supabase/migrations/0002_functions.sql`, in that order. The first
+     creates all six tables (`products`, `matches`, `votes`, `champions`,
      `activity_log`, `payments`) with the constraints, indexes, and RLS
      policies the app relies on (anon clients get read-only access to
      `products`/`matches`/`champions`/`activity_log`; `votes` and `payments`
-     are only reachable server-side via the service role key).
+     are only reachable server-side via the service role key). The second
+     adds `cast_vote(...)`, a Postgres function that atomically records a
+     vote and increments the match's counter so concurrent votes can never
+     lose an increment.
    - Grab your Project URL, `anon` public key, and `service_role` secret key
      from Project Settings → API.
 
@@ -74,8 +78,26 @@ supabase/
 ### Build status
 
 - **Phase 1 (done):** project scaffold, Supabase schema/migrations, env setup.
-- **Phase 2:** core arena UI — submission, matchups, voting with real
-  vote-locking, eliminated list, Hall of Fame, activity feed.
+- **Phase 2 (done):** core arena UI — submission, auto-pairing, matchups,
+  voting with real vote-locking (DB unique constraint + signed visitor
+  cookie), win-streak/elimination/champion-crowning logic, eliminated list,
+  Hall of Fame, activity feed. State refreshes via a 5s poll of `/api/state`.
 - **Phase 3:** LemonSqueezy checkout + webhook-gated boost/revive/defend.
 - **Phase 4:** public product pages + embeddable champion badge.
 - **Phase 5:** polish — mobile, empty/loading states, anti-spam.
+
+### How voting/pairing works (Phase 2)
+
+- Submitting is always free (`POST /api/products`) and immediately triggers
+  pairing: any 2+ active, unmatched products in the same category are
+  matched into a new duel.
+- Voting (`POST /api/votes`) sets a signed, httpOnly `arena_vid` cookie on
+  first vote and hashes it (with `FINGERPRINT_SALT`) before storing it — the
+  DB's unique `(match_id, voter_fingerprint)` constraint is the real
+  enforcement of "1 vote per visitor per duel," not just client-side UI
+  state. A lightweight in-memory IP rate limiter also caps request bursts
+  (best-effort only — resets on cold start, not shared across instances).
+- Reaching 5 votes on a side resolves the match: the winner's streak
+  increments (crowning a Champion at 3 in a row) and the loser is
+  eliminated. The winner is then re-entered into the pairing pool unless
+  they were just crowned.

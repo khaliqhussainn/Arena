@@ -16,7 +16,11 @@ export type VoteSide = "a" | "b";
 export type PaymentType = "boost" | "revive" | "defend";
 export type PaymentStatus = "pending" | "completed" | "failed";
 
-export interface Product {
+// These are `type` (not `interface`) deliberately: interfaces don't satisfy
+// the `Record<string, unknown>` structural constraint that supabase-js's
+// generic Database typing relies on for Row/Insert/Update, which silently
+// collapses every query builder call to `never`.
+export type Product = {
   id: string;
   name: string;
   url: string;
@@ -26,9 +30,9 @@ export interface Product {
   wins: number;
   is_defending: boolean;
   submitted_at: string;
-}
+};
 
-export interface Match {
+export type Match = {
   id: string;
   category: Category;
   product_a_id: string;
@@ -38,31 +42,31 @@ export interface Match {
   status: MatchStatus;
   created_at: string;
   resolved_at: string | null;
-}
+};
 
-export interface Vote {
+export type Vote = {
   id: string;
   match_id: string;
   voter_fingerprint: string;
   side: VoteSide;
   created_at: string;
-}
+};
 
-export interface Champion {
+export type Champion = {
   id: string;
   product_id: string;
   category: Category;
   crowned_at: string;
   times_defended: number;
-}
+};
 
-export interface ActivityLogEntry {
+export type ActivityLogEntry = {
   id: string;
   text: string;
   created_at: string;
-}
+};
 
-export interface Payment {
+export type Payment = {
   id: string;
   lemonsqueezy_order_id: string | null;
   product_id: string | null;
@@ -71,21 +75,56 @@ export interface Payment {
   amount: number | null;
   status: PaymentStatus;
   created_at: string;
-}
+};
+
+type Relationships = [];
 
 export interface Database {
   public: {
     Tables: {
-      products: { Row: Product; Insert: Partial<Product>; Update: Partial<Product> };
-      matches: { Row: Match; Insert: Partial<Match>; Update: Partial<Match> };
-      votes: { Row: Vote; Insert: Partial<Vote>; Update: Partial<Vote> };
-      champions: { Row: Champion; Insert: Partial<Champion>; Update: Partial<Champion> };
+      products: {
+        Row: Product;
+        Insert: Partial<Product>;
+        Update: Partial<Product>;
+        Relationships: Relationships;
+      };
+      matches: {
+        Row: Match;
+        Insert: Partial<Match>;
+        Update: Partial<Match>;
+        Relationships: Relationships;
+      };
+      votes: {
+        Row: Vote;
+        Insert: Partial<Vote>;
+        Update: Partial<Vote>;
+        Relationships: Relationships;
+      };
+      champions: {
+        Row: Champion;
+        Insert: Partial<Champion>;
+        Update: Partial<Champion>;
+        Relationships: Relationships;
+      };
       activity_log: {
         Row: ActivityLogEntry;
         Insert: Partial<ActivityLogEntry>;
         Update: Partial<ActivityLogEntry>;
+        Relationships: Relationships;
       };
-      payments: { Row: Payment; Insert: Partial<Payment>; Update: Partial<Payment> };
+      payments: {
+        Row: Payment;
+        Insert: Partial<Payment>;
+        Update: Partial<Payment>;
+        Relationships: Relationships;
+      };
+    };
+    Views: Record<string, never>;
+    Functions: {
+      cast_vote: {
+        Args: { p_match_id: string; p_fingerprint: string; p_side: VoteSide };
+        Returns: Match;
+      };
     };
   };
 }
