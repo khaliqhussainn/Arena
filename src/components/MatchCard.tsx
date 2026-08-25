@@ -2,10 +2,13 @@
 
 import type { MatchWithProducts } from "@/lib/arena-state";
 import type { VoteSide } from "@/types/database";
+import { PayButton } from "./PayButton";
 
 const VOTES_TO_WIN = 5;
 
 function SideColumn({
+  productId,
+  matchId,
   name,
   pitch,
   url,
@@ -15,7 +18,10 @@ function SideColumn({
   voting,
   votedSide,
   onVote,
+  onPaid,
 }: {
+  productId: string;
+  matchId: string;
   name: string;
   pitch: string;
   url: string;
@@ -25,6 +31,7 @@ function SideColumn({
   voting: boolean;
   votedSide?: VoteSide;
   onVote: (side: VoteSide) => void;
+  onPaid?: () => void;
 }) {
   const pct = Math.min(100, (votes / VOTES_TO_WIN) * 100);
   const isMyVote = votedSide === side;
@@ -65,6 +72,7 @@ function SideColumn({
           {label}
         </button>
       </div>
+      <PayButton type="boost" productId={productId} matchId={matchId} onPaid={onPaid} />
     </div>
   );
 }
@@ -74,11 +82,13 @@ export function MatchCard({
   votedSide,
   voting = false,
   onVote,
+  onPaid,
 }: {
   match: MatchWithProducts;
   votedSide?: VoteSide;
   voting?: boolean;
   onVote: (matchId: string, side: VoteSide) => void;
+  onPaid?: () => void;
 }) {
   const disabled = votedSide !== undefined;
 
@@ -91,6 +101,8 @@ export function MatchCard({
       </div>
       <div className="flex items-stretch gap-4">
         <SideColumn
+          productId={match.product_a.id}
+          matchId={match.id}
           name={match.product_a.name}
           pitch={match.product_a.pitch}
           url={match.product_a.url}
@@ -100,9 +112,12 @@ export function MatchCard({
           voting={voting}
           votedSide={votedSide}
           onVote={(side) => onVote(match.id, side)}
+          onPaid={onPaid}
         />
         <div className="flex items-center font-display text-sm font-bold text-gold">VS</div>
         <SideColumn
+          productId={match.product_b.id}
+          matchId={match.id}
           name={match.product_b.name}
           pitch={match.product_b.pitch}
           url={match.product_b.url}
@@ -112,6 +127,7 @@ export function MatchCard({
           voting={voting}
           votedSide={votedSide}
           onVote={(side) => onVote(match.id, side)}
+          onPaid={onPaid}
         />
       </div>
     </div>

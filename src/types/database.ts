@@ -127,6 +127,10 @@ export interface Database {
         Args: { p_match_id: string; p_fingerprint: string; p_side: VoteSide };
         Returns: Match;
       };
+      boost_votes: {
+        Args: { p_match_id: string; p_side: VoteSide; p_amount: number };
+        Returns: Match;
+      };
     };
   };
 }

@@ -49,15 +49,18 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
     }
   }, []);
 
+  async function refreshState() {
+    try {
+      const res = await fetch("/api/state");
+      if (res.ok) setState(await res.json());
+    } catch {
+      // best-effort refresh; ignore transient network errors
+    }
+  }
+
   useEffect(() => {
-    const id = setInterval(async () => {
-      if (inFlight.current) return;
-      try {
-        const res = await fetch("/api/state");
-        if (res.ok) setState(await res.json());
-      } catch {
-        // best-effort poll; ignore transient network errors
-      }
+    const id = setInterval(() => {
+      if (!inFlight.current) refreshState();
     }, POLL_MS);
     return () => clearInterval(id);
   }, []);
@@ -195,6 +198,7 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
                     votedSide={votedMap[m.id]}
                     voting={pendingVotes.has(m.id)}
                     onVote={castVote}
+                    onPaid={refreshState}
                   />
                 ))}
               </div>
@@ -203,12 +207,12 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
 
           <div className="flex flex-col gap-4">
             <h2 className="font-display text-xl font-semibold text-ink">Hall of Fame</h2>
-            <HallOfFame champions={filtered.champions} />
+            <HallOfFame champions={filtered.champions} onPaid={refreshState} />
           </div>
 
           <div className="flex flex-col gap-4">
             <h2 className="font-display text-xl font-semibold text-ink">Eliminated</h2>
-            <EliminatedList products={filtered.eliminated} />
+            <EliminatedList products={filtered.eliminated} onPaid={refreshState} />
           </div>
         </div>
 

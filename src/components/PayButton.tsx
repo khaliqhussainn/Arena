@@ -1,0 +1,79 @@
+"use client";
+
+import { useState } from "react";
+import type { PaymentType } from "@/types/database";
+
+const LABELS: Record<PaymentType, string> = {
+  boost: "⚡ Boost +2 votes — $5",
+  revive: "💊 Revive — $10",
+  defend: "🛡️ Defend the throne — $20",
+};
+
+export function PayButton({
+  type,
+  productId,
+  matchId,
+  className,
+  onPaid,
+}: {
+  type: PaymentType;
+  productId: string;
+  matchId?: string;
+  className?: string;
+  onPaid?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleClick() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, productId, matchId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        setError(data.error ?? "Could not start checkout.");
+        return;
+      }
+
+      if (window.LemonSqueezy?.Url) {
+        window.LemonSqueezy.Setup?.({
+          eventHandler: (event) => {
+            if (event.event === "Checkout.Success") {
+              // Give the webhook a moment to land before refreshing.
+              setTimeout(() => onPaid?.(), 1500);
+            }
+          },
+        });
+        window.LemonSqueezy.Url.Open(data.url);
+      } else {
+        // Overlay script hasn't loaded yet — fall back to a plain redirect.
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      }
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className={
+          className ??
+          "rounded-full bg-gold px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-gold-soft disabled:opacity-50"
+        }
+      >
+        {loading ? "Starting checkout…" : LABELS[type]}
+      </button>
+      {error && <span className="text-xs text-crimson">{error}</span>}
+    </div>
+  );
+}

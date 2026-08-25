@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { verifyWebhookSignature } from "@/lib/lemonsqueezy";
+import { applyBoost, applyDefend, applyRevive } from "@/lib/arena";
+import type { PaymentType } from "@/types/database";
+
+interface LemonSqueezyWebhookPayload {
+  meta?: {
+    event_name?: string;
+    custom_data?: Record<string, string>;
+  };
+  data?: {
+    id?: string;
+    attributes?: {
+      status?: string;
+      total?: number;
+    };
+  };
+}
+
+/**
+ * The single source of truth for granting a paid action: we only ever
+ * apply a boost/revive/defend here, after verifying LemonSqueezy's
+ * signature on the raw body and confirming the order is paid. The
+ * `payments` table's unique constraint on `lemonsqueezy_order_id` makes
+ * this idempotent against webhook retries.
+ */
+export async function POST(req: NextRequest) {
+  const rawBody = await req.text();
+  const signature = req.headers.get("x-signature");
+
+  if (!verifyWebhookSignature(rawBody, signature)) {
+    return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
+  }
+
+  let payload: LemonSqueezyWebhookPayload;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
+  }
+
+  const eventName = payload.meta?.event_name;
+  const status = payload.data?.attributes?.status;
+  const orderId = payload.data?.id;
+  const custom = payload.meta?.custom_data;
+
+  // Only act on a confirmed, paid order carrying the custom data our
+  // checkout attached. Anything else (test pings, other event types,
+  // unpaid orders) is acknowledged with 200 but ignored.
+  if (eventName !== "order_created" || status !== "paid" || !orderId || !custom) {
+    return NextResponse.json({ received: true });
+  }
+
+  const type = custom.type as PaymentType | undefined;
+  const productId = custom.product_id;
+  const matchId = custom.match_id;
+
+  if (!type || !productId || (type !== "boost" && type !== "revive" && type !== "defend")) {
+    return NextResponse.json({ received: true });
+  }
+
+  const admin = createAdminSupabaseClient();
+
+  const { error: insertError } = await admin.from("payments").insert({
+    lemonsqueezy_order_id: orderId,
+    product_id: productId,
+    match_id: matchId ?? null,
+    type,
+    amount: payload.data?.attributes?.total ?? null,
+    status: "completed",
+  });
+
+  if (insertError) {
+    // 23505 = unique_violation on lemonsqueezy_order_id: this order was
+    // already processed by an earlier delivery of the same webhook event.
+    // Any other insert error we surface as a failure so LemonSqueezy retries.
+    if (insertError.code === "23505") {
+      return NextResponse.json({ received: true, alreadyProcessed: true });
+    }
+    return NextResponse.json({ error: "Could not record payment." }, { status: 500 });
+  }
+
+  const { data: product } = await admin.from("products").select("*").eq("id", productId).maybeSingle();
+  if (!product) return NextResponse.json({ received: true });
+
+  if (type === "boost" && matchId) {
+    await applyBoost(admin, matchId, productId);
+  } else if (type === "revive") {
+    await applyRevive(admin, product);
+  } else if (type === "defend") {
+    await applyDefend(admin, product);
+  }
+
+  return NextResponse.json({ received: true });
+}

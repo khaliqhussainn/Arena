@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter, IBM_Plex_Mono } from "next/font/google";
+import { LemonSqueezyScript } from "@/components/LemonSqueezyScript";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-paper text-ink font-body">
         {children}
+        <LemonSqueezyScript />
       </body>
     </html>
   );

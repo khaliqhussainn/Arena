@@ -86,19 +86,42 @@ async function applyWin(
         is_defending: false,
       })
       .eq("id", winner.id);
-    await admin.from("champions").insert({
-      product_id: winner.id,
-      category,
-      times_defended: 0,
-    });
+
     const suffix = opts.uncontested ? " (advanced uncontested)" : "";
     const line = opts.loser
       ? `beating ${opts.loser.name} ${opts.votesLine}`
       : "after no challenger appeared";
-    await logActivity(
-      admin,
-      `🏆 ${winner.name} has been crowned Champion of ${category}, ${line}${suffix}!`,
-    );
+
+    if (winner.is_defending) {
+      // Extending an existing reign, not a fresh crowning.
+      const { data: existing } = await admin
+        .from("champions")
+        .select("*")
+        .eq("product_id", winner.id)
+        .order("crowned_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (existing) {
+        await admin
+          .from("champions")
+          .update({ times_defended: existing.times_defended + 1 })
+          .eq("id", existing.id);
+      }
+      await logActivity(
+        admin,
+        `🛡️ ${winner.name} has successfully defended the throne in ${category}, ${line}${suffix}!`,
+      );
+    } else {
+      await admin.from("champions").insert({
+        product_id: winner.id,
+        category,
+        times_defended: 0,
+      });
+      await logActivity(
+        admin,
+        `🏆 ${winner.name} has been crowned Champion of ${category}, ${line}${suffix}!`,
+      );
+    }
   } else {
     await admin
       .from("products")
@@ -153,7 +176,10 @@ export async function resolveMatchIfComplete(admin: AdminClient, match: Match) {
   ]);
   if (!winner || !loser) return;
 
-  await admin.from("products").update({ status: "eliminated", wins: 0 }).eq("id", loser.id);
+  await admin
+    .from("products")
+    .update({ status: "eliminated", wins: 0, is_defending: false })
+    .eq("id", loser.id);
   await logActivity(admin, `${loser.name} has been eliminated`);
 
   const votesLine = `${Math.max(match.votes_a, match.votes_b)}-${Math.min(match.votes_a, match.votes_b)}`;
@@ -201,4 +227,87 @@ export async function autoAdvanceStaleWaitingProducts(admin: AdminClient) {
   for (const category of touchedCategories) {
     await pairUnmatchedProducts(admin, category);
   }
+}
+
+/**
+ * Paid action effects. Each is only ever invoked from the LemonSqueezy
+ * webhook handler after payment is confirmed — never directly from a
+ * client request.
+ */
+
+export async function applyRevive(admin: AdminClient, product: Product) {
+  // Conditional on still being eliminated: guards against a delayed/retried
+  // webhook re-applying after the product's state has already moved on.
+  const { data: updated } = await admin
+    .from("products")
+    .update({
+      status: "active",
+      wins: 0,
+      is_defending: false,
+      pool_entered_at: new Date().toISOString(),
+    })
+    .eq("id", product.id)
+    .eq("status", "eliminated")
+    .select()
+    .maybeSingle();
+  if (!updated) return;
+
+  await logActivity(
+    admin,
+    `💊 ${product.name} has been revived and re-enters the arena in ${product.category}`,
+  );
+  await pairUnmatchedProducts(admin, product.category);
+}
+
+export async function applyDefend(admin: AdminClient, product: Product) {
+  // Conditional on still being a non-defending champion: same delayed-
+  // webhook guard as applyRevive.
+  const { data: updated } = await admin
+    .from("products")
+    .update({
+      status: "active",
+      wins: 0,
+      is_defending: true,
+      pool_entered_at: new Date().toISOString(),
+    })
+    .eq("id", product.id)
+    .eq("status", "champion")
+    .eq("is_defending", false)
+    .select()
+    .maybeSingle();
+  if (!updated) return;
+
+  await logActivity(
+    admin,
+    `🛡️ ${product.name} steps back into the arena to defend the throne in ${product.category}`,
+  );
+  await pairUnmatchedProducts(admin, product.category);
+}
+
+const BOOST_VOTES = 2;
+
+export async function applyBoost(admin: AdminClient, matchId: string, productId: string) {
+  const { data: match } = await admin
+    .from("matches")
+    .select("*")
+    .eq("id", matchId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (!match) return; // the duel already ended before payment confirmed — nothing to apply
+
+  const side = match.product_a_id === productId ? "a" : match.product_b_id === productId ? "b" : null;
+  if (!side) return;
+
+  const { data: boosted } = await admin.rpc("boost_votes", {
+    p_match_id: matchId,
+    p_side: side,
+    p_amount: BOOST_VOTES,
+  });
+
+  const { data: product } = await admin.from("products").select("*").eq("id", productId).maybeSingle();
+  if (product) {
+    await logActivity(admin, `⚡ ${product.name} got boosted +${BOOST_VOTES} votes in ${match.category}`);
+  }
+
+  if (boosted) await resolveMatchIfComplete(admin, boosted);
 }

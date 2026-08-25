@@ -1,7 +1,16 @@
+"use client";
+
 import type { ChampionWithProduct } from "@/lib/arena-state";
 import { timeAgo } from "@/lib/format";
+import { PayButton } from "./PayButton";
 
-export function HallOfFame({ champions }: { champions: ChampionWithProduct[] }) {
+export function HallOfFame({
+  champions,
+  onPaid,
+}: {
+  champions: ChampionWithProduct[];
+  onPaid?: () => void;
+}) {
   if (champions.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-gold/40 p-6 text-center text-sm text-muted">
@@ -13,13 +22,14 @@ export function HallOfFame({ champions }: { champions: ChampionWithProduct[] }) 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {champions.map((c) => (
-        <a
+        <div
           key={c.id}
-          href={`/product/${c.product_id}`}
           className="flex flex-col gap-2 rounded-2xl border border-gold/40 bg-gradient-to-br from-bg to-bg2 p-5 text-paper shadow-md transition hover:border-gold"
         >
           <span className="text-2xl">👑</span>
-          <span className="font-display text-lg font-semibold">{c.product.name}</span>
+          <a href={`/product/${c.product_id}`} className="font-display text-lg font-semibold hover:text-gold-soft">
+            {c.product.name}
+          </a>
           <span className="text-xs font-mono uppercase tracking-wide text-gold-soft">
             {c.category}
           </span>
@@ -36,7 +46,15 @@ export function HallOfFame({ champions }: { champions: ChampionWithProduct[] }) 
               {c.product.uncontested_wins > 1 ? "s" : ""}
             </span>
           )}
-        </a>
+          {c.product.status === "champion" && (
+            <PayButton
+              type="defend"
+              productId={c.product_id}
+              onPaid={onPaid}
+              className="mt-1 rounded-full bg-gold px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-gold-soft disabled:opacity-50"
+            />
+          )}
+        </div>
       ))}
     </div>
   );
