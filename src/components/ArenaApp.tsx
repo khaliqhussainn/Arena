@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ArenaState } from "@/lib/arena-state";
-import type { Product, VoteSide } from "@/types/database";
+import { CATEGORIES, type Category, type Product, type VoteSide } from "@/types/database";
 import { SubmitForm } from "./SubmitForm";
 import { CategoryTabs, type TabValue } from "./CategoryTabs";
 import { MatchCard } from "./MatchCard";
 import { HallOfFame } from "./HallOfFame";
 import { EliminatedList } from "./EliminatedList";
 import { ActivityFeed } from "./ActivityFeed";
+import { WaitingCard } from "./WaitingCard";
 
 const POLL_MS = 5000;
 const VOTED_STORAGE_KEY = "arena_voted_matches";
@@ -28,6 +29,7 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
   const [votedMap, setVotedMap] = useState<Record<string, VoteSide>>({});
   const [pendingVotes, setPendingVotes] = useState<Set<string>>(new Set());
   const [voteError, setVoteError] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState<{ category: Category; from: string } | null>(null);
   const inFlight = useRef(false);
 
   useEffect(() => {
@@ -36,6 +38,15 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
     // window-less render, avoiding a hydration mismatch.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setVotedMap(loadVotedMap());
+
+    const params = new URLSearchParams(window.location.search);
+    const joinCategory = params.get("join");
+    const from = params.get("from");
+    if (joinCategory && (CATEGORIES as readonly string[]).includes(joinCategory)) {
+      setTab(joinCategory as Category);
+      setChallenge({ category: joinCategory as Category, from: from || "A founder" });
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   }, []);
 
   useEffect(() => {
@@ -138,10 +149,35 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
 
       <section className="flex flex-col gap-10 px-6 py-12 md:px-10 lg:flex-row lg:items-start">
         <div className="flex flex-1 flex-col gap-10">
+          {challenge && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-gold bg-gold/10 px-5 py-3">
+              <p className="text-sm text-ink">
+                👋 <strong>{challenge.from}</strong> is waiting for a challenger in{" "}
+                <strong>{challenge.category}</strong>. Submit your product above to start the
+                duel!
+              </p>
+              <button
+                onClick={() => setChallenge(null)}
+                className="shrink-0 text-sm text-muted hover:text-ink"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col gap-4">
             <CategoryTabs selected={tab} onSelect={setTab} counts={counts} />
             {voteError && <p className="text-sm text-crimson">{voteError}</p>}
           </div>
+
+          {filtered.waiting.length > 0 && (
+            <div className="flex flex-col gap-3">
+              {filtered.waiting.map((p) => (
+                <WaitingCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
 
           <div className="flex flex-col gap-4">
             <h2 className="font-display text-xl font-semibold text-ink">Live duels</h2>
@@ -162,12 +198,6 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
                   />
                 ))}
               </div>
-            )}
-            {filtered.waiting.length > 0 && (
-              <p className="text-sm text-muted">
-                {filtered.waiting.map((p) => p.name).join(", ")}{" "}
-                {filtered.waiting.length === 1 ? "is" : "are"} waiting for an opponent.
-              </p>
             )}
           </div>
 

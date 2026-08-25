@@ -30,6 +30,8 @@ export type Product = {
   wins: number;
   is_defending: boolean;
   submitted_at: string;
+  pool_entered_at: string;
+  uncontested_wins: number;
 };
 
 export type Match = {

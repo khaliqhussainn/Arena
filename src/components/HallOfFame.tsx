@@ -30,6 +30,12 @@ export function HallOfFame({ champions }: { champions: ChampionWithProduct[] }) 
               <span className="text-gold-soft">Defended {c.times_defended}×</span>
             )}
           </div>
+          {c.product.uncontested_wins > 0 && (
+            <span className="text-xs text-muted">
+              Includes {c.product.uncontested_wins} uncontested win
+              {c.product.uncontested_wins > 1 ? "s" : ""}
+            </span>
+          )}
         </a>
       ))}
     </div>

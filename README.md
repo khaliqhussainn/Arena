@@ -22,8 +22,8 @@ row and become the category's permanent Champion.
 2. **Create a Supabase project**
 
    - Go to [supabase.com](https://supabase.com) → New project (free tier).
-   - In the SQL editor, run `supabase/migrations/0001_init.sql` then
-     `supabase/migrations/0002_functions.sql`, in that order. The first
+   - In the SQL editor, run the files in `supabase/migrations/` in order
+     (`0001_init.sql`, `0002_functions.sql`, `0003_uncontested.sql`). The first
      creates all six tables (`products`, `matches`, `votes`, `champions`,
      `activity_log`, `payments`) with the constraints, indexes, and RLS
      policies the app relies on (anon clients get read-only access to
@@ -101,3 +101,12 @@ supabase/
   increments (crowning a Champion at 3 in a row) and the loser is
   eliminated. The winner is then re-entered into the pairing pool unless
   they were just crowned.
+- A product alone in its category (no one to pair against) is shown as
+  "Waiting for a challenger" with a one-tap copyable invite link
+  (`/?join=<category>&from=<name>`) that pre-selects that category and
+  shows a banner when someone follows it — the intended growth loop for a
+  lone early submitter. If still uncontested 24h after they last entered
+  the pool, they auto-advance with a win (marked "uncontested" in the
+  activity feed and, if it makes them Champion, noted honestly on their
+  Hall of Fame card). There's no cron for this — it's checked lazily on
+  every `/api/state` fetch, which the client already polls every 5s.

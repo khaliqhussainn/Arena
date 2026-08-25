@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getArenaState } from "@/lib/arena-state";
-import { pairUnmatchedProducts, logActivity } from "@/lib/arena";
+import { pairUnmatchedProducts, logActivity, autoAdvanceStaleWaitingProducts } from "@/lib/arena";
 import { getClientIp } from "@/lib/fingerprint";
 import { rateLimit } from "@/lib/rate-limit";
 import { CATEGORIES, type Category } from "@/types/database";
@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
 
   await logActivity(admin, `🆕 ${product.name} just entered the arena in ${category}`);
   await pairUnmatchedProducts(admin, category as Category);
+  await autoAdvanceStaleWaitingProducts(admin);
 
   const state = await getArenaState(admin);
   return NextResponse.json({ product, state }, { status: 201 });
