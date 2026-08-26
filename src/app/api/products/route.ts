@@ -13,11 +13,14 @@ function normalizeUrl(raw: string): string | null {
   try {
     const u = new URL(withScheme);
     if (!u.hostname.includes(".")) return null;
+    u.protocol = "https:"; // normalize scheme so http/https variants dedupe as the same URL
     return u.toString();
   } catch {
     return null;
   }
 }
+
+const MIN_FILL_TIME_MS = 1200;
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -35,7 +38,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { name, url, category, pitch } = (body ?? {}) as Record<string, unknown>;
+  const { name, url, category, pitch, website, renderedAt } = (body ?? {}) as Record<
+    string,
+    unknown
+  >;
+
+  // Honeypot: a real user never sees or fills this field.
+  if (typeof website === "string" && website.trim() !== "") {
+    return NextResponse.json({ error: "Could not submit product. Please try again." }, { status: 400 });
+  }
+  // A form submitted faster than a human could plausibly fill it out.
+  if (typeof renderedAt !== "number" || Date.now() - renderedAt < MIN_FILL_TIME_MS) {
+    return NextResponse.json({ error: "Could not submit product. Please try again." }, { status: 400 });
+  }
 
   if (typeof name !== "string" || !name.trim() || name.trim().length > 80) {
     return NextResponse.json({ error: "Product name is required (max 80 characters)." }, { status: 400 });
@@ -58,6 +73,19 @@ export async function POST(req: NextRequest) {
   }
 
   const admin = createAdminSupabaseClient();
+
+  const { data: existing } = await admin
+    .from("products")
+    .select("id")
+    .ilike("url", normalizedUrl)
+    .limit(1)
+    .maybeSingle();
+  if (existing) {
+    return NextResponse.json(
+      { error: "This product has already been submitted to the arena." },
+      { status: 409 },
+    );
+  }
 
   const { data: product, error } = await admin
     .from("products")

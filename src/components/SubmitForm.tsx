@@ -13,6 +13,8 @@ export function SubmitForm({
   const [url, setUrl] = useState("");
   const [category, setCategory] = useState<Category>("General");
   const [pitch, setPitch] = useState("");
+  const [website, setWebsite] = useState(""); // honeypot — real users never see or fill this
+  const [renderedAt] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -27,7 +29,7 @@ export function SubmitForm({
       const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, url, category, pitch }),
+        body: JSON.stringify({ name, url, category, pitch, website, renderedAt }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -51,6 +53,19 @@ export function SubmitForm({
       onSubmit={handleSubmit}
       className="mx-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-border bg-surface p-6 text-left"
     >
+      {/* Honeypot: hidden from real users, invisible to screen readers, but
+          present in the DOM for bots that blindly fill every field. */}
+      <input
+        type="text"
+        name="website"
+        value={website}
+        onChange={(e) => setWebsite(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute left-[-9999px] h-0 w-0 opacity-0"
+      />
+
       <div className="grid gap-3 sm:grid-cols-2">
         <input
           value={name}

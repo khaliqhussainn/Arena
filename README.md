@@ -90,7 +90,7 @@ supabase/
   Hall of Fame, activity feed. State refreshes via a 5s poll of `/api/state`.
 - **Phase 3 (done):** LemonSqueezy checkout + webhook-gated boost/revive/defend.
 - **Phase 4 (done):** public product pages + embeddable champion badge.
-- **Phase 5:** polish — mobile, empty/loading states, anti-spam.
+- **Phase 5 (done):** polish — mobile, empty/loading states, anti-spam.
 
 ### How voting/pairing works (Phase 2)
 
@@ -177,3 +177,25 @@ toggle yet). Tokens in `src/app/globals.css`:
   backgrounds for contrast.
 - `--danger`/`--danger-soft` (red) reserved for errors and the eliminated
   badge — the only non-accent color in the UI.
+
+### Polish pass (Phase 5)
+
+- **Mobile:** duel cards stack vertically below `sm` instead of squeezing
+  two product columns side by side.
+- **Loading states:** a root `loading.tsx` (spinner) and a
+  `/product/[id]/loading.tsx` (skeleton) cover client-side navigation;
+  every action button already had its own inline loading label
+  ("Voting…", "Entering the arena…", "Starting checkout…").
+- **Error/not-found states:** a branded `error.tsx` (with retry) replaces
+  Next's default error overlay if a Supabase call throws, and a branded
+  `not-found.tsx` covers both truly unmatched routes and `notFound()` calls
+  (e.g. an invalid product id).
+- **Anti-spam on submissions:** a honeypot field (invisible to real users,
+  present in the DOM for bots that fill everything), a minimum-fill-time
+  check (rejects a submission faster than a human could plausibly type
+  one), and a case-insensitive duplicate-URL check — on top of the
+  existing per-IP rate limit.
+- **Anti-spam on votes:** added a per-visitor-fingerprint rate limit
+  alongside the existing per-IP one — IP alone can false-positive on
+  shared/NAT'd networks, and this also catches a bot that cycles IPs but
+  reuses one visitor id.

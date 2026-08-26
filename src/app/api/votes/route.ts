@@ -33,6 +33,13 @@ export async function POST(req: NextRequest) {
   const { id: visitorId, isNew } = getOrCreateVisitorId(req);
   const voterHash = hashFingerprint(visitorId);
 
+  // Per-visitor limit in addition to per-IP: IP alone can false-positive on
+  // shared/NAT'd networks, and this catches a bot cycling IPs but reusing
+  // one visitor id.
+  if (!rateLimit(`vote:fp:${voterHash}`, 30, 60 * 1000)) {
+    return NextResponse.json({ error: "Slow down — too many votes." }, { status: 429 });
+  }
+
   const admin = createAdminSupabaseClient();
 
   const { data: match, error } = await admin.rpc("cast_vote", {

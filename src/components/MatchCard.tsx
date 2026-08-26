@@ -99,7 +99,7 @@ export function MatchCard({
           {match.category}
         </span>
       </div>
-      <div className="flex items-stretch gap-4">
+      <div className="flex flex-col items-stretch gap-4 sm:flex-row">
         <SideColumn
           productId={match.product_a.id}
           matchId={match.id}
@@ -114,7 +114,9 @@ export function MatchCard({
           onVote={(side) => onVote(match.id, side)}
           onPaid={onPaid}
         />
-        <div className="flex items-center font-display text-sm font-bold text-accent">VS</div>
+        <div className="flex items-center justify-center font-display text-sm font-bold text-accent sm:justify-normal">
+          VS
+        </div>
         <SideColumn
           productId={match.product_b.id}
           matchId={match.id}
