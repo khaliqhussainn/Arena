@@ -68,12 +68,12 @@ export function PayButton({
         disabled={loading}
         className={
           className ??
-          "rounded-full bg-gold px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-gold-soft disabled:opacity-50"
+          "rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink transition hover:bg-accent-soft disabled:opacity-50"
         }
       >
         {loading ? "Starting checkout…" : LABELS[type]}
       </button>
-      {error && <span className="text-xs text-crimson">{error}</span>}
+      {error && <span className="text-xs text-danger">{error}</span>}
     </div>
   );
 }

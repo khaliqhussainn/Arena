@@ -12,7 +12,7 @@ export function ActivityFeed({
   return (
     <ul className="flex flex-col gap-3">
       {activity.map((a) => (
-        <li key={a.id} className="flex flex-col gap-0.5 border-b border-ink/10 pb-3 last:border-0">
+        <li key={a.id} className="flex flex-col gap-0.5 border-b border-border pb-3 last:border-0">
           <span className="text-sm text-ink">{a.text}</span>
           <span className="font-mono text-xs text-muted">{timeAgo(a.created_at)}</span>
         </li>

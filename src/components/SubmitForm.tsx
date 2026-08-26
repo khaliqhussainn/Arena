@@ -49,7 +49,7 @@ export function SubmitForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-white/10 bg-bg2/80 p-6 text-left backdrop-blur"
+      className="mx-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-border bg-surface p-6 text-left"
     >
       <div className="grid gap-3 sm:grid-cols-2">
         <input
@@ -58,12 +58,12 @@ export function SubmitForm({
           placeholder="Product name"
           maxLength={80}
           required
-          className="rounded-lg border border-white/10 bg-bg px-3 py-2 text-paper placeholder:text-muted focus:border-gold focus:outline-none"
+          className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category)}
-          className="rounded-lg border border-white/10 bg-bg px-3 py-2 text-paper focus:border-gold focus:outline-none"
+          className="rounded-lg border border-border bg-bg px-3 py-2 text-ink focus:border-accent focus:outline-none"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -77,7 +77,7 @@ export function SubmitForm({
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://yourproduct.com"
         required
-        className="rounded-lg border border-white/10 bg-bg px-3 py-2 text-paper placeholder:text-muted focus:border-gold focus:outline-none"
+        className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
       />
       <input
         value={pitch}
@@ -85,12 +85,12 @@ export function SubmitForm({
         placeholder="One-line pitch (what does it do?)"
         maxLength={140}
         required
-        className="rounded-lg border border-white/10 bg-bg px-3 py-2 text-paper placeholder:text-muted focus:border-gold focus:outline-none"
+        className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
       />
 
-      {error && <p className="text-sm text-crimson">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       {success && (
-        <p className="text-sm text-gold-soft">
+        <p className="text-sm text-ink">
           You&apos;re in the arena. Watch for your first duel below.
         </p>
       )}
@@ -98,7 +98,7 @@ export function SubmitForm({
       <button
         type="submit"
         disabled={submitting}
-        className="mt-1 rounded-lg bg-gold px-4 py-2 font-display font-semibold text-ink transition hover:bg-gold-soft disabled:opacity-60"
+        className="mt-1 rounded-lg bg-accent px-4 py-2 font-display font-semibold text-accent-ink transition hover:bg-accent-soft disabled:opacity-60"
       >
         {submitting ? "Entering the arena…" : "Enter the arena — it's free"}
       </button>

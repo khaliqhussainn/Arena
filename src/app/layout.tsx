@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${bricolage.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-paper text-ink font-body">
+      <body className="min-h-full flex flex-col bg-bg text-ink font-body">
         {children}
         <LemonSqueezyScript />
       </body>

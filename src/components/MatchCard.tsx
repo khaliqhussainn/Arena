@@ -47,14 +47,14 @@ function SideColumn({
         href={url}
         target="_blank"
         rel="noopener noreferrer nofollow"
-        className="font-display text-lg font-semibold text-ink hover:text-crimson"
+        className="font-display text-lg font-semibold text-ink hover:text-accent"
       >
         {name}
       </a>
       <p className="min-h-[2.5em] text-sm text-muted">{pitch}</p>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-ink/10">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
         <div
-          className="h-full rounded-full bg-crimson transition-all"
+          className="h-full rounded-full bg-accent transition-all"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -65,8 +65,8 @@ function SideColumn({
           disabled={disabled || voting}
           className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
             isMyVote
-              ? "bg-ink/10 text-ink/50"
-              : "bg-ink text-paper hover:bg-crimson disabled:opacity-40"
+              ? "bg-surface-2 text-muted"
+              : "bg-ink text-bg hover:bg-accent hover:text-accent-ink disabled:opacity-40"
           }`}
         >
           {label}
@@ -93,7 +93,7 @@ export function MatchCard({
   const disabled = votedSide !== undefined;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-ink/10 bg-white/60 p-5 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs uppercase tracking-wide text-muted">
           {match.category}
@@ -114,7 +114,7 @@ export function MatchCard({
           onVote={(side) => onVote(match.id, side)}
           onPaid={onPaid}
         />
-        <div className="flex items-center font-display text-sm font-bold text-gold">VS</div>
+        <div className="flex items-center font-display text-sm font-bold text-accent">VS</div>
         <SideColumn
           productId={match.product_b.id}
           matchId={match.id}

@@ -24,7 +24,7 @@ export function WaitingCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-gold/50 bg-gold/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-accent/40 bg-accent-soft/10 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
         <span className="font-mono text-xs uppercase tracking-wide text-muted">
           {product.category} · Waiting for a challenger
@@ -36,7 +36,7 @@ export function WaitingCard({ product }: { product: Product }) {
       </div>
       <button
         onClick={copyInvite}
-        className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper transition hover:bg-crimson"
+        className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-bg transition hover:bg-accent hover:text-accent-ink"
       >
         {copied ? "Link copied!" : "Copy invite link"}
       </button>

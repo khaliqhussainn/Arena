@@ -1,25 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #14110f;
-  --bg2: #1c1815;
-  --gold: #e8b84b;
-  --gold-soft: #f3d793;
-  --crimson: #d64550;
-  --paper: #faf6ee;
-  --ink: #211c17;
-  --muted: #948b7e;
+  --bg: #ffffff;
+  --surface: #f6f8f9;
+  --surface-2: #eef2f3;
+  --ink: #0a0a0a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #00b4d8;
+  --accent-soft: #90e0ef;
+  --accent-ink: #052c36;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --surface: #111113;
+    --surface-2: #1b1b1e;
+    --ink: #ffffff;
+    --muted: #9ca3af;
+    --border: #2a2a2e;
+    --danger: #f87171;
+    --danger-soft: #3f1d1d;
+  }
 }
 
 @theme inline {
   --color-bg: var(--bg);
-  --color-bg2: var(--bg2);
-  --color-gold: var(--gold);
-  --color-gold-soft: var(--gold-soft);
-  --color-crimson: var(--crimson);
-  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -27,6 +46,6 @@
 }
 
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
 }

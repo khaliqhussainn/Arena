@@ -24,8 +24,8 @@ export function CategoryTabs({
             onClick={() => onSelect(tab)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               active
-                ? "border-gold bg-gold text-ink"
-                : "border-ink/10 bg-transparent text-ink/70 hover:border-gold/50"
+                ? "border-accent bg-accent text-accent-ink"
+                : "border-border bg-transparent text-muted hover:border-accent/50 hover:text-ink"
             }`}
           >
             {tab}

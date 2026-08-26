@@ -22,17 +22,17 @@ row and become the category's permanent Champion.
 2. **Create a Supabase project**
 
    - Go to [supabase.com](https://supabase.com) → New project (free tier).
-   - In the SQL editor, run the files in `supabase/migrations/` in order
-     (`0001_init.sql`, `0002_functions.sql`, `0003_uncontested.sql`,
-     `0004_boost.sql`). The first
-     creates all six tables (`products`, `matches`, `votes`, `champions`,
-     `activity_log`, `payments`) with the constraints, indexes, and RLS
-     policies the app relies on (anon clients get read-only access to
-     `products`/`matches`/`champions`/`activity_log`; `votes` and `payments`
-     are only reachable server-side via the service role key). The second
-     adds `cast_vote(...)`, a Postgres function that atomically records a
-     vote and increments the match's counter so concurrent votes can never
-     lose an increment.
+   - In the SQL editor, run the files in `supabase/migrations/` in order:
+     `0001_init.sql` creates all six tables (`products`, `matches`, `votes`,
+     `champions`, `activity_log`, `payments`) with the constraints, indexes,
+     and RLS policies the app relies on (anon clients get read-only access
+     to `products`/`matches`/`champions`/`activity_log`; `votes` and
+     `payments` are only reachable server-side via the service role key).
+     `0002_functions.sql` adds `cast_vote(...)`, a Postgres function that
+     atomically records a vote and increments the match's counter.
+     `0003_uncontested.sql` adds the columns behind the waiting-for-a-
+     challenger/uncontested-advance feature. `0004_boost.sql` adds
+     `boost_votes(...)`, the same atomic-increment pattern for paid boosts.
    - Grab your Project URL, `anon` public key, and `service_role` secret key
      from Project Settings → API.
 
@@ -89,7 +89,7 @@ supabase/
   cookie), win-streak/elimination/champion-crowning logic, eliminated list,
   Hall of Fame, activity feed. State refreshes via a 5s poll of `/api/state`.
 - **Phase 3 (done):** LemonSqueezy checkout + webhook-gated boost/revive/defend.
-- **Phase 4:** public product pages + embeddable champion badge.
+- **Phase 4 (done):** public product pages + embeddable champion badge.
 - **Phase 5:** polish — mobile, empty/loading states, anti-spam.
 
 ### How voting/pairing works (Phase 2)
@@ -148,3 +148,32 @@ supabase/
   pool needing 3 fresh wins; winning while defending increments the
   existing `champions` row's `times_defended` instead of crowning a new
   entry. Losing while defending eliminates them like any other duel loss.
+
+### Public product pages + champion badge (Phase 4)
+
+- `/product/[id]` — public page for any submitted product: status, pitch,
+  link, category, and full duel history (win/loss + score, newest first).
+  A crowned product also shows when it was crowned, times defended, and
+  (only while still reigning) its embed snippet.
+- `/api/badge/[id]` — server-rendered SVG badge (`image/svg+xml`, 1h cache),
+  404s for anything that isn't currently a champion. Self-contained dark
+  card with the accent color, so it looks the same regardless of the host
+  site's theme.
+- The embed snippet is a plain `<a><img></a>` pointed at the badge endpoint
+  and the product's `/product/[id]` page — the intended backlink loop from
+  every champion's site back to the Arena.
+
+### Design system
+
+Flat, non-gradient, light/dark aware via `prefers-color-scheme` (no manual
+toggle yet). Tokens in `src/app/globals.css`:
+
+- Primary surface: white (`#ffffff`) in light mode, black (`#000000`) in
+  dark mode — `--bg`, with `--surface`/`--surface-2` as near-neutral card
+  tints and `--ink`/`--muted` as the corresponding text colors.
+- Accent: `#00b4d8` (`--accent`) and `#90e0ef` (`--accent-soft`), used for
+  buttons, active states, links, progress bars, and highlighted text.
+  `--accent-ink` is the fixed dark text color used on accent-colored
+  backgrounds for contrast.
+- `--danger`/`--danger-soft` (red) reserved for errors and the eliminated
+  badge — the only non-accent color in the UI.
