@@ -165,8 +165,12 @@ supabase/
 
 ### Design system
 
-Flat, non-gradient, light/dark aware via `prefers-color-scheme` (no manual
-toggle yet). Tokens in `src/app/globals.css`:
+Flat, non-gradient. Defaults to the OS's `prefers-color-scheme`, with a
+manual toggle (🌙/☀️ button, fixed top-right on every page) that overrides
+it — the choice is saved to `localStorage` (`arena_theme`) and applied via
+a `data-theme="light"|"dark"` attribute on `<html>`, set by a small inline
+script in the root layout before first paint so there's no flash of the
+wrong theme on load. Tokens in `src/app/globals.css`:
 
 - Primary surface: white (`#ffffff`) in light mode, black (`#000000`) in
   dark mode — `--bg`, with `--surface`/`--surface-2` as near-neutral card

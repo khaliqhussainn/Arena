@@ -14,8 +14,10 @@
   --danger-soft: #fee2e2;
 }
 
+/* System preference (no explicit toggle choice yet). Guarded so an
+   explicit light override still wins even when the OS is in dark mode. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #000000;
     --surface: #111113;
     --surface-2: #1b1b1e;
@@ -25,6 +27,19 @@
     --danger: #f87171;
     --danger-soft: #3f1d1d;
   }
+}
+
+/* Explicit toggle choice (src/components/ThemeToggle.tsx) wins over the
+   OS preference in both directions. */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --surface: #111113;
+  --surface-2: #1b1b1e;
+  --ink: #ffffff;
+  --muted: #9ca3af;
+  --border: #2a2a2e;
+  --danger: #f87171;
+  --danger-soft: #3f1d1d;
 }
 
 @theme inline {

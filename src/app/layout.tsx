@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter, IBM_Plex_Mono } from "next/font/google";
 import { LemonSqueezyScript } from "@/components/LemonSqueezyScript";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
+
+// Applies a saved theme override before first paint, so a light/dark
+// toggle choice never flashes the wrong theme on load. Runs as the very
+// first thing in <body> — synchronous inline scripts block rendering of
+// what follows until they finish, and document.documentElement always
+// already exists at this point.
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('arena_theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-display",
@@ -32,6 +40,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bricolage.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-ink font-body">
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <ThemeToggle />
         {children}
         <LemonSqueezyScript />
       </body>
