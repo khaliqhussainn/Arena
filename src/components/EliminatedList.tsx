@@ -15,26 +15,27 @@ export function EliminatedList({
   }
 
   return (
-    <ul className="flex flex-col divide-y divide-border rounded-xl border border-border bg-surface">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {products.map((p) => (
-        <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
-          <div className="flex flex-col">
-            <a
-              href={`/product/${p.id}`}
-              className="text-sm font-medium text-muted line-through decoration-danger/50 hover:text-ink"
-            >
-              {p.name}
-            </a>
-            <span className="text-xs text-muted">{p.category}</span>
+        <div key={p.id} className="relative flex flex-col gap-2 overflow-hidden border border-border bg-surface p-5">
+          <div className="pointer-events-none absolute -right-12 top-5 w-40 rotate-45 bg-danger py-1 text-center text-[10px] font-bold uppercase tracking-widest text-danger-ink">
+            Eliminated
           </div>
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger">
-              Eliminated
-            </span>
-            <PayButton type="revive" productId={p.id} onPaid={onPaid} />
-          </div>
-        </li>
+          <a
+            href={`/product/${p.id}`}
+            className="max-w-[75%] font-display text-lg font-semibold text-muted hover:text-ink"
+          >
+            {p.name}
+          </a>
+          <span className="text-xs font-mono uppercase tracking-wide text-muted">{p.category}</span>
+          <PayButton
+            type="revive"
+            productId={p.id}
+            onPaid={onPaid}
+            className="mt-1 rounded-none border border-danger bg-danger px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-danger-ink shadow-none transition-transform duration-150 ease-out active:scale-95"
+          />
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }

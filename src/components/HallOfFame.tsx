@@ -3,6 +3,7 @@
 import type { ChampionWithProduct } from "@/lib/arena-state";
 import { timeAgo } from "@/lib/format";
 import { PayButton } from "./PayButton";
+import { CrownIcon } from "./icons";
 
 export function HallOfFame({
   champions,
@@ -13,7 +14,7 @@ export function HallOfFame({
 }) {
   if (champions.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted">
+      <p className="border border-dashed border-border p-6 text-center text-sm text-muted">
         No champions crowned yet — win 3 duels in a row to claim the throne.
       </p>
     );
@@ -24,9 +25,9 @@ export function HallOfFame({
       {champions.map((c) => (
         <div
           key={c.id}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5 transition hover:border-accent"
+          className="flex flex-col gap-2 border border-border bg-surface p-5 transition-colors duration-150 ease-out hover:border-accent"
         >
-          <span className="text-2xl">👑</span>
+          <CrownIcon className="h-6 w-6 text-accent" />
           <a href={`/product/${c.product_id}`} className="font-display text-lg font-semibold text-ink hover:text-accent">
             {c.product.name}
           </a>
@@ -37,7 +38,9 @@ export function HallOfFame({
           <div className="mt-1 flex items-center justify-between text-xs text-muted">
             <span>Crowned {timeAgo(c.crowned_at)}</span>
             {c.times_defended > 0 && (
-              <span className="text-accent">Defended {c.times_defended}×</span>
+              <span className="bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-black">
+                Times defended: {c.times_defended}
+              </span>
             )}
           </div>
           {c.product.uncontested_wins > 0 && (
@@ -47,12 +50,7 @@ export function HallOfFame({
             </span>
           )}
           {c.product.status === "champion" && (
-            <PayButton
-              type="defend"
-              productId={c.product_id}
-              onPaid={onPaid}
-              className="mt-1 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink transition hover:bg-accent-soft disabled:opacity-50"
-            />
+            <PayButton type="defend" productId={c.product_id} onPaid={onPaid} />
           )}
         </div>
       ))}

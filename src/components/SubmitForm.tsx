@@ -51,7 +51,7 @@ export function SubmitForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="mx-auto flex w-full max-w-xl flex-col gap-3 rounded-2xl border border-border bg-surface p-6 text-left"
+      className="mx-auto flex w-full max-w-xl flex-col gap-3 border border-border bg-surface p-6 text-left"
     >
       {/* Honeypot: hidden from real users, invisible to screen readers, but
           present in the DOM for bots that blindly fill every field. */}
@@ -73,12 +73,12 @@ export function SubmitForm({
           placeholder="Product name"
           maxLength={80}
           required
-          className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+          className="border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category)}
-          className="rounded-lg border border-border bg-bg px-3 py-2 text-ink focus:border-accent focus:outline-none"
+          className="border border-border bg-bg px-3 py-2 text-ink focus:border-accent focus:outline-none"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -92,7 +92,7 @@ export function SubmitForm({
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://yourproduct.com"
         required
-        className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+        className="border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
       />
       <input
         value={pitch}
@@ -100,7 +100,7 @@ export function SubmitForm({
         placeholder="One-line pitch (what does it do?)"
         maxLength={140}
         required
-        className="rounded-lg border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+        className="border border-border bg-bg px-3 py-2 text-ink placeholder:text-muted focus:border-accent focus:outline-none"
       />
 
       {error && <p className="text-sm text-danger">{error}</p>}
@@ -113,7 +113,7 @@ export function SubmitForm({
       <button
         type="submit"
         disabled={submitting}
-        className="mt-1 rounded-lg bg-accent px-4 py-2 font-display font-semibold text-accent-ink transition hover:bg-accent-soft disabled:opacity-60"
+        className="mt-1 border border-border bg-accent px-4 py-2 font-display font-bold uppercase tracking-wide text-accent-ink shadow-none transition-transform duration-150 ease-out hover:bg-accent-soft active:scale-95 disabled:active:scale-100 disabled:opacity-60"
       >
         {submitting ? "Entering the arena…" : "Enter the arena — it's free"}
       </button>

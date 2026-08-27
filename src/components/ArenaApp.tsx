@@ -132,7 +132,7 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
   return (
     <main className="flex flex-col">
       <section className="flex flex-col items-center justify-center gap-8 px-6 py-24 text-center">
-        <span className="rounded-full bg-accent-soft/15 px-3 py-1 font-mono text-xs uppercase tracking-[0.3em] text-accent">
+        <span className="border border-border bg-accent-soft px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.3em] text-black">
           The Arena
         </span>
         <h1 className="max-w-3xl font-display text-4xl font-semibold leading-tight text-ink sm:text-6xl">
@@ -148,15 +148,15 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
       <section className="flex flex-col gap-10 px-6 py-12 md:px-10 lg:flex-row lg:items-start">
         <div className="flex flex-1 flex-col gap-10">
           {challenge && (
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft/10 px-5 py-3">
-              <p className="text-sm text-ink">
-                👋 <strong>{challenge.from}</strong> is waiting for a challenger in{" "}
+            <div className="flex items-center justify-between gap-3 border border-border bg-accent-soft px-5 py-3">
+              <p className="text-sm font-medium text-black">
+                <strong>{challenge.from}</strong> is waiting for a challenger in{" "}
                 <strong>{challenge.category}</strong>. Submit your product above to start the
                 duel!
               </p>
               <button
                 onClick={() => setChallenge(null)}
-                className="shrink-0 text-sm text-muted hover:text-ink"
+                className="shrink-0 text-sm font-bold text-black transition-transform duration-150 ease-out active:scale-90"
                 aria-label="Dismiss"
               >
                 ✕

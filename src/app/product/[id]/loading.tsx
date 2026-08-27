@@ -7,8 +7,8 @@ export default function ProductLoading() {
         <div className="h-4 w-full animate-pulse rounded bg-surface-2" />
         <div className="h-4 w-1/3 animate-pulse rounded bg-surface-2" />
       </div>
-      <div className="h-24 w-full animate-pulse rounded-2xl bg-surface-2" />
-      <div className="h-40 w-full animate-pulse rounded-xl bg-surface-2" />
+      <div className="h-24 w-full animate-pulse border border-border bg-surface-2" />
+      <div className="h-40 w-full animate-pulse border border-border bg-surface-2" />
     </main>
   );
 }

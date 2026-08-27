@@ -4,9 +4,9 @@ import { useState } from "react";
 import type { PaymentType } from "@/types/database";
 
 const LABELS: Record<PaymentType, string> = {
-  boost: "⚡ Boost +2 votes — $5",
-  revive: "💊 Revive — $10",
-  defend: "🛡️ Defend the throne — $20",
+  boost: "$5 BOOST (+2 VOTES)",
+  revive: "$10 REVIVE",
+  defend: "$20 DEFEND THE THRONE",
 };
 
 export function PayButton({
@@ -14,12 +14,14 @@ export function PayButton({
   productId,
   matchId,
   className,
+  label,
   onPaid,
 }: {
   type: PaymentType;
   productId: string;
   matchId?: string;
   className?: string;
+  label?: string;
   onPaid?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
@@ -68,10 +70,10 @@ export function PayButton({
         disabled={loading}
         className={
           className ??
-          "rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink transition hover:bg-accent-soft disabled:opacity-50"
+          "rounded-none border border-border bg-accent px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-ink shadow-none transition-transform duration-150 ease-out hover:bg-accent-soft active:scale-95 disabled:active:scale-100 disabled:opacity-50"
         }
       >
-        {loading ? "Starting checkout…" : LABELS[type]}
+        {loading ? "STARTING CHECKOUT…" : (label ?? LABELS[type])}
       </button>
       {error && <span className="text-xs text-danger">{error}</span>}
     </div>

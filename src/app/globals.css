@@ -2,16 +2,16 @@
 
 :root {
   --bg: #ffffff;
-  --surface: #f6f8f9;
+  --surface: #f8f9fa;
   --surface-2: #eef2f3;
-  --ink: #0a0a0a;
+  --ink: #000000;
   --muted: #6b7280;
-  --border: #e5e7eb;
+  --border: #000000;
   --accent: #00b4d8;
   --accent-soft: #90e0ef;
-  --accent-ink: #052c36;
-  --danger: #dc2626;
-  --danger-soft: #fee2e2;
+  --accent-ink: #000000;
+  --danger: #ff3b30;
+  --danger-ink: #ffffff;
 }
 
 /* System preference (no explicit toggle choice yet). Guarded so an
@@ -19,13 +19,11 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #000000;
-    --surface: #111113;
+    --surface: #0d0d0d;
     --surface-2: #1b1b1e;
     --ink: #ffffff;
     --muted: #9ca3af;
-    --border: #2a2a2e;
-    --danger: #f87171;
-    --danger-soft: #3f1d1d;
+    --border: #ffffff;
   }
 }
 
@@ -33,13 +31,11 @@
    OS preference in both directions. */
 :root[data-theme="dark"] {
   --bg: #000000;
-  --surface: #111113;
+  --surface: #0d0d0d;
   --surface-2: #1b1b1e;
   --ink: #ffffff;
   --muted: #9ca3af;
-  --border: #2a2a2e;
-  --danger: #f87171;
-  --danger-soft: #3f1d1d;
+  --border: #ffffff;
 }
 
 @theme inline {
@@ -53,7 +49,7 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
   --color-danger: var(--danger);
-  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
 
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -63,4 +59,17 @@
 body {
   background: var(--bg);
   color: var(--ink);
+}
+
+/* Vote counter "pop": remounted (via a `key` on the number) each time the
+   count changes, replaying this on every update. */
+@keyframes slide-up-pop {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

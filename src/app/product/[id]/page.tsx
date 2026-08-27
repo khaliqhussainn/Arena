@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getProductDetail } from "@/lib/arena-state";
 import { BadgeEmbed } from "@/components/BadgeEmbed";
+import { CrownIcon } from "@/components/icons";
 import { timeAgo } from "@/lib/format";
 import type { ProductStatus } from "@/types/database";
 
@@ -15,9 +16,9 @@ const STATUS_LABEL: Record<ProductStatus, string> = {
 };
 
 const STATUS_CLASS: Record<ProductStatus, string> = {
-  active: "bg-accent-soft/20 text-accent",
-  eliminated: "bg-danger-soft text-danger",
-  champion: "bg-accent text-accent-ink",
+  active: "border border-border bg-accent-soft text-black",
+  eliminated: "border border-danger bg-danger text-danger-ink",
+  champion: "border border-border bg-accent text-accent-ink",
 };
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +40,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-3xl font-semibold text-ink">{product.name}</h1>
           <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_CLASS[product.status]}`}
+            className={`px-2.5 py-0.5 font-mono text-xs font-bold uppercase tracking-wide ${STATUS_CLASS[product.status]}`}
           >
             {STATUS_LABEL[product.status]}
           </span>
@@ -61,14 +62,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </div>
 
       {champion && (
-        <div className="rounded-2xl border border-accent/40 bg-accent-soft/10 p-5">
-          <p className="text-sm text-ink">
-            👑 Crowned Champion {timeAgo(champion.crowned_at)}
-            {champion.times_defended > 0
-              ? `, defended the throne ${champion.times_defended}×`
-              : ""}
-            {product.status !== "champion" ? " (no longer reigning)" : ""}
-          </p>
+        <div className="border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 text-sm text-ink">
+            <CrownIcon className="h-5 w-5 shrink-0 text-accent" />
+            <p>
+              Crowned Champion {timeAgo(champion.crowned_at)}
+              {champion.times_defended > 0
+                ? `, defended the throne ${champion.times_defended}×`
+                : ""}
+              {product.status !== "champion" ? " (no longer reigning)" : ""}
+            </p>
+          </div>
           {product.status === "champion" && (
             <BadgeEmbed
               badgeUrl={`${siteUrl}/api/badge/${product.id}`}
@@ -83,18 +87,24 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         {history.length === 0 ? (
           <p className="text-sm text-muted">No duels yet.</p>
         ) : (
-          <ul className="flex flex-col divide-y divide-border rounded-xl border border-border bg-surface">
+          <ul className="flex flex-col divide-y divide-border border border-border bg-surface">
             {history.map((h, i) => (
-              <li key={i} className="flex items-center justify-between px-4 py-2.5">
-                <span className="text-sm text-ink">
-                  <span className={h.won ? "text-accent" : "text-danger"}>
-                    {h.won ? "Won" : "Lost"}
+              <li key={i} className="flex items-center justify-between gap-3 px-4 py-2.5 font-mono text-sm">
+                <span className={h.won ? "text-black" : "text-ink"}>
+                  <span
+                    className={
+                      h.won
+                        ? "bg-accent-soft px-1.5 py-0.5 font-bold text-black"
+                        : "bg-surface-2 px-1.5 py-0.5 font-bold text-muted"
+                    }
+                  >
+                    {h.won ? "BEAT" : "LOST TO"}
                   </span>{" "}
-                  vs {h.opponentName}
+                  <span className="text-ink">
+                    {h.opponentName} [{h.scoreFor}-{h.scoreAgainst}]
+                  </span>
                 </span>
-                <span className="font-mono text-sm text-muted">
-                  {h.scoreFor}-{h.scoreAgainst}
-                </span>
+                <span className="shrink-0 text-xs text-muted">{timeAgo(h.resolvedAt)}</span>
               </li>
             ))}
           </ul>

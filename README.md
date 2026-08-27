@@ -165,22 +165,43 @@ supabase/
 
 ### Design system
 
-Flat, non-gradient. Defaults to the OS's `prefers-color-scheme`, with a
-manual toggle (🌙/☀️ button, fixed top-right on every page) that overrides
-it — the choice is saved to `localStorage` (`arena_theme`) and applied via
-a `data-theme="light"|"dark"` attribute on `<html>`, set by a small inline
-script in the root layout before first paint so there's no flash of the
-wrong theme on load. Tokens in `src/app/globals.css`:
+Flat, non-gradient, brutalist-leaning: solid 1px borders (no soft gray —
+`--border` is literally black in light mode / white in dark, same as the
+text color), zero shadows, zero rounded corners on structural elements,
+`active:scale-95` tactile presses instead of hover glows. Defaults to the
+OS's `prefers-color-scheme`, with a manual toggle (🌙/☀️ button, fixed
+top-right on every page) that overrides it — saved to `localStorage`
+(`arena_theme`), applied via a `data-theme="light"|"dark"` attribute on
+`<html>` set by a small inline script before first paint so there's no
+flash of the wrong theme. Tokens in `src/app/globals.css`:
 
 - Primary surface: white (`#ffffff`) in light mode, black (`#000000`) in
   dark mode — `--bg`, with `--surface`/`--surface-2` as near-neutral card
-  tints and `--ink`/`--muted` as the corresponding text colors.
-- Accent: `#00b4d8` (`--accent`) and `#90e0ef` (`--accent-soft`), used for
-  buttons, active states, links, progress bars, and highlighted text.
-  `--accent-ink` is the fixed dark text color used on accent-colored
-  backgrounds for contrast.
-- `--danger`/`--danger-soft` (red) reserved for errors and the eliminated
-  badge — the only non-accent color in the UI.
+  tints and `--ink`/`--muted`/`--border` as the corresponding
+  text/border colors (border == ink, always solid, never gray).
+- Accent: `#00b4d8` (`--accent`) for primary CTAs/active states/vote
+  buttons, `#90e0ef` (`--accent-soft`) for secondary fills (badges, tags,
+  the tug-of-war bar's minority side). `--accent-ink` (black) is the fixed
+  text color on accent-colored backgrounds.
+- `--danger` (`#ff3b30`) + `--danger-ink` (white): solid fill for the
+  eliminated ribbon, the near-loss warning border, and the urgent boost
+  CTA — the only non-accent color in the UI, reserved for elimination/
+  critical states.
+
+**Game-feel details worth knowing:**
+- Each duel card shows a shared tug-of-war bar (relative vote share,
+  accent vs. accent-soft) above the two per-side "X/5" counters — the bar
+  communicates momentum, the counters carry the actual race-to-5 mechanic.
+- **Near-loss state**: when a side's opponent hits 4/5 votes, that side
+  gets a solid red border and its boost button flips to an urgent
+  "⚠ $5 BOOST (+2 VOTES)" — the moment-of-truth conversion trigger.
+- Vote counts pop with a quick slide-up animation on change (a CSS
+  keyframe replayed via `key={votes}`, no animation library).
+- Eliminated products render as cards with a diagonal red "ELIMINATED"
+  ribbon (classic corner-ribbon CSS) instead of a plain list row.
+- The waiting-for-a-challenger card's primary CTA opens a pre-filled
+  Twitter/X share intent ("Invite a rival"); copying the raw link is a
+  secondary action next to it.
 
 ### Polish pass (Phase 5)
 
