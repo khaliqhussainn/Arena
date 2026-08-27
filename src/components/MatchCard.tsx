@@ -3,11 +3,13 @@
 import type { MatchWithProducts } from "@/lib/arena-state";
 import type { VoteSide } from "@/types/database";
 import { PayButton } from "./PayButton";
+import { ProductAvatar } from "./ProductAvatar";
+import { ShareButtons } from "./ShareButtons";
 
 const VOTES_TO_WIN = 5;
 const NEAR_LOSS_THRESHOLD = VOTES_TO_WIN - 1;
 
-function SideColumn({
+function SideCard({
   productId,
   matchId,
   name,
@@ -37,42 +39,60 @@ function SideColumn({
   onPaid?: () => void;
 }) {
   const isMyVote = votedSide === side;
+  const pct = Math.min(100, (votes / VOTES_TO_WIN) * 100);
 
-  let label = "VOTE";
-  if (isMyVote) label = "VOTED";
-  else if (voting) label = "VOTING…";
-  else if (disabled) label = "VOTED";
+  let label = "Vote";
+  if (isMyVote) label = "Voted for this side";
+  else if (voting) label = "Voting…";
+  else if (disabled) label = "Voted";
 
   return (
     <div
-      className={`flex flex-1 flex-col gap-2 p-3 ${nearLoss ? "border border-danger" : "border border-transparent"}`}
+      className={`flex flex-1 flex-col gap-3 p-4 transition-shadow duration-150 sm:p-5 ${
+        nearLoss ? "rounded-xl ring-1 ring-danger/60" : ""
+      }`}
     >
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer nofollow"
-        className="font-display text-lg font-semibold text-ink hover:text-accent"
-      >
-        {name}
-      </a>
-      <p className="min-h-[2.5em] text-sm text-muted">{pitch}</p>
-      <div className="flex items-baseline justify-between">
-        <span key={votes} className="font-mono text-lg font-bold text-ink [animation:slide-up-pop_150ms_ease-out]">
-          {votes}
-          <span className="text-sm font-normal text-muted">/{VOTES_TO_WIN}</span>
-        </span>
-        <button
-          onClick={() => onVote(side)}
-          disabled={disabled || voting}
-          className={`rounded-none px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-transform duration-150 ease-out active:scale-95 disabled:active:scale-100 ${
-            isMyVote
-              ? "border border-border bg-surface-2 text-muted"
-              : "bg-accent text-accent-ink shadow-none hover:bg-accent-soft disabled:opacity-40"
-          }`}
-        >
-          {label}
-        </button>
+      <div className="flex items-center gap-3">
+        <ProductAvatar name={name} accent={isMyVote} />
+        <div className="flex min-w-0 flex-col">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="truncate font-display text-base font-bold text-ink hover:text-accent sm:text-lg"
+          >
+            {name}
+          </a>
+          <p className="hidden truncate text-xs text-muted sm:block">{pitch}</p>
+        </div>
       </div>
+
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-baseline justify-between">
+          <span key={votes} className="font-mono text-2xl font-bold text-ink [animation:slide-up-pop_150ms_ease-out]">
+            {votes}
+          </span>
+          <span className="font-mono text-xs text-muted">of {VOTES_TO_WIN} votes</span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
+          <div
+            className="h-full rounded-full bg-accent transition-all duration-300 ease-out"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={() => onVote(side)}
+        disabled={disabled || voting}
+        className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-150 ease-out active:scale-95 disabled:active:scale-100 ${
+          isMyVote
+            ? "border border-border bg-surface-2 text-muted shadow-none"
+            : "bg-accent text-accent-ink hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40"
+        }`}
+      >
+        {label}
+      </button>
 
       {nearLoss ? (
         <PayButton
@@ -80,11 +100,17 @@ function SideColumn({
           productId={productId}
           matchId={matchId}
           onPaid={onPaid}
-          className="rounded-none border border-danger bg-danger px-3 py-2 text-center text-xs font-bold uppercase tracking-wide text-danger-ink shadow-none transition-transform duration-150 ease-out hover:bg-danger active:scale-95"
-          label="⚠ $5 BOOST (+2 VOTES)"
+          label="Boost +2 votes ($5) — one from elimination"
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger/10 px-3 py-2 text-xs font-semibold text-danger shadow-none transition-all duration-150 ease-out hover:bg-danger hover:text-danger-ink active:scale-95"
         />
       ) : (
-        <PayButton type="boost" productId={productId} matchId={matchId} onPaid={onPaid} />
+        <PayButton
+          type="boost"
+          productId={productId}
+          matchId={matchId}
+          onPaid={onPaid}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent-soft/10 px-3 py-2 text-xs font-semibold text-accent shadow-none transition-all duration-150 ease-out hover:bg-accent-soft/20 active:scale-95"
+        />
       )}
     </div>
   );
@@ -104,32 +130,35 @@ export function MatchCard({
   onPaid?: () => void;
 }) {
   const disabled = votedSide !== undefined;
-  const total = match.votes_a + match.votes_b;
-  const aPct = total === 0 ? 50 : (match.votes_a / total) * 100;
-
   const aNearLoss = match.votes_b === NEAR_LOSS_THRESHOLD && match.votes_a < VOTES_TO_WIN;
   const bNearLoss = match.votes_a === NEAR_LOSS_THRESHOLD && match.votes_b < VOTES_TO_WIN;
 
+  const shareText = `${match.product_a.name} vs ${match.product_b.name} is heating up in ${match.category} on The Arena — cast your vote!`;
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/?join=${encodeURIComponent(match.category)}`
+      : "";
+
   return (
-    <div className="flex flex-col gap-3 border border-border bg-surface p-5">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-xs uppercase tracking-wide text-muted">
-          {match.category}
-        </span>
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-md transition-shadow duration-150 ease-out hover:shadow-lg">
+      <div className="flex items-center justify-between border-b border-border px-4 py-2.5 sm:px-5">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-accent-soft/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
+            {match.category}
+          </span>
+          <span className="flex items-center gap-1 text-xs font-medium text-muted">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
+            Live
+          </span>
+        </div>
+        <ShareButtons url={shareUrl} text={shareText} />
       </div>
 
-      {/* Tug-of-war bar: proportion of votes cast so far, not progress to 5 —
-          the per-side counters below carry the race-to-5 mechanic. */}
-      <div className="flex h-1 w-full overflow-hidden bg-surface-2">
-        <div className="h-full bg-accent transition-all duration-150 ease-out" style={{ width: `${aPct}%` }} />
-        <div
-          className="h-full bg-accent-soft transition-all duration-150 ease-out"
-          style={{ width: `${100 - aPct}%` }}
-        />
-      </div>
-
-      <div className="flex flex-col items-stretch divide-y divide-border sm:flex-row sm:divide-x sm:divide-y-0">
-        <SideColumn
+      <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-[1fr_auto_1fr] sm:divide-y-0 sm:divide-x">
+        <SideCard
           productId={match.product_a.id}
           matchId={match.id}
           name={match.product_a.name}
@@ -144,12 +173,12 @@ export function MatchCard({
           onVote={(side) => onVote(match.id, side)}
           onPaid={onPaid}
         />
-        <div className="flex items-center justify-center py-2 sm:py-0">
-          <span className="border border-border bg-accent px-2 py-0.5 font-display text-xs font-bold text-accent-ink">
+        <div className="flex items-center justify-center px-3 py-2 sm:py-0">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-accent bg-accent-soft/15 font-display text-xs font-bold text-accent shadow-sm">
             VS
           </span>
         </div>
-        <SideColumn
+        <SideCard
           productId={match.product_b.id}
           matchId={match.id}
           name={match.product_b.name}
@@ -165,6 +194,11 @@ export function MatchCard({
           onPaid={onPaid}
         />
       </div>
+      {disabled && (
+        <p className="border-t border-border px-4 py-2 text-center text-xs text-muted sm:px-5">
+          You can only vote once per duel
+        </p>
+      )}
     </div>
   );
 }

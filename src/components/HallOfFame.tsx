@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import type { ChampionWithProduct } from "@/lib/arena-state";
 import { timeAgo } from "@/lib/format";
 import { PayButton } from "./PayButton";
+import { ProductAvatar } from "./ProductAvatar";
 import { CrownIcon } from "./icons";
 
 export function HallOfFame({
@@ -14,7 +16,7 @@ export function HallOfFame({
 }) {
   if (champions.length === 0) {
     return (
-      <p className="border border-dashed border-border p-6 text-center text-sm text-muted">
+      <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
         No champions crowned yet — win 3 duels in a row to claim the throne.
       </p>
     );
@@ -25,21 +27,29 @@ export function HallOfFame({
       {champions.map((c) => (
         <div
           key={c.id}
-          className="flex flex-col gap-2 border border-border bg-surface p-5 transition-colors duration-150 ease-out hover:border-accent"
+          className="group flex flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-sm transition-all duration-150 ease-out hover:-translate-y-1 hover:shadow-lg"
         >
-          <CrownIcon className="h-6 w-6 text-accent" />
-          <a href={`/product/${c.product_id}`} className="font-display text-lg font-semibold text-ink hover:text-accent">
-            {c.product.name}
-          </a>
-          <span className="text-xs font-mono uppercase tracking-wide text-accent">
-            {c.category}
-          </span>
-          <p className="text-sm text-muted">{c.product.pitch}</p>
+          <div className="flex items-start justify-between">
+            <ProductAvatar name={c.product.name} accent size="lg" />
+            <CrownIcon
+              className="h-6 w-6 text-accent transition-transform group-hover:scale-110"
+              style={{ animation: "crown-float 3s ease-in-out infinite" }}
+            />
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <Link href={`/product/${c.product_id}`} className="font-display text-lg font-bold text-ink hover:text-accent">
+              {c.product.name}
+            </Link>
+            <span className="text-xs font-semibold uppercase tracking-wide text-accent">
+              {c.category}
+            </span>
+          </div>
+          <p className="line-clamp-2 text-sm text-muted">{c.product.pitch}</p>
           <div className="mt-1 flex items-center justify-between text-xs text-muted">
             <span>Crowned {timeAgo(c.crowned_at)}</span>
             {c.times_defended > 0 && (
-              <span className="bg-accent-soft px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-black">
-                Times defended: {c.times_defended}
+              <span className="rounded-full bg-accent-soft/20 px-2 py-0.5 font-mono text-[10px] font-bold text-accent">
+                Defended {c.times_defended}×
               </span>
             )}
           </div>

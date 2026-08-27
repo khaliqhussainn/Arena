@@ -2,40 +2,54 @@
 
 :root {
   --bg: #ffffff;
-  --surface: #f8f9fa;
-  --surface-2: #eef2f3;
+  --surface: #fafafa;
+  --surface-2: #f2f3f5;
   --ink: #000000;
   --muted: #6b7280;
-  --border: #000000;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.16);
   --accent: #00b4d8;
   --accent-soft: #90e0ef;
   --accent-ink: #000000;
   --danger: #ff3b30;
   --danger-ink: #ffffff;
+  --shadow-color: 220 3% 15%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.06), 0 1px 1px hsl(var(--shadow-color) / 0.04);
+  --shadow-md: 0 4px 16px hsl(var(--shadow-color) / 0.08), 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-lg: 0 12px 32px hsl(var(--shadow-color) / 0.12), 0 2px 6px hsl(var(--shadow-color) / 0.08);
+  --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.25), 0 8px 24px rgba(0, 180, 216, 0.12);
 }
 
-/* System preference (no explicit toggle choice yet). Guarded so an
-   explicit light override still wins even when the OS is in dark mode. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #000000;
-    --surface: #0d0d0d;
-    --surface-2: #1b1b1e;
+    --surface: #0a0a0a;
+    --surface-2: #141416;
     --ink: #ffffff;
     --muted: #9ca3af;
-    --border: #ffffff;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --shadow-color: 220 40% 2%;
+    --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+    --shadow-md: 0 4px 20px hsl(var(--shadow-color) / 0.5);
+    --shadow-lg: 0 16px 40px hsl(var(--shadow-color) / 0.6);
+    --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.3), 0 8px 28px rgba(0, 180, 216, 0.18);
   }
 }
 
-/* Explicit toggle choice (src/components/ThemeToggle.tsx) wins over the
-   OS preference in both directions. */
 :root[data-theme="dark"] {
   --bg: #000000;
-  --surface: #0d0d0d;
-  --surface-2: #1b1b1e;
+  --surface: #0a0a0a;
+  --surface-2: #141416;
   --ink: #ffffff;
   --muted: #9ca3af;
-  --border: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --shadow-color: 220 40% 2%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+  --shadow-md: 0 4px 20px hsl(var(--shadow-color) / 0.5);
+  --shadow-lg: 0 16px 40px hsl(var(--shadow-color) / 0.6);
+  --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.3), 0 8px 28px rgba(0, 180, 216, 0.18);
 }
 
 @theme inline {
@@ -45,6 +59,7 @@
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
@@ -71,5 +86,66 @@ body {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* Section reveal-on-scroll (src/components/ScrollReveal.tsx). */
+@keyframes reveal-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Idle crown motion — slow, subtle, never distracting. */
+@keyframes crown-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-3deg);
+  }
+}
+
+/* Hero combat-atmosphere background elements — slow drift + fade, low
+   opacity throughout so they never compete with foreground content. */
+@keyframes drift-slow {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-12px, 14px) rotate(4deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes drift-slow-reverse {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(14px, -10px) rotate(-5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+@keyframes spark-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
   }
 }

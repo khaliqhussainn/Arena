@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Swords } from "lucide-react";
 import type { Product } from "@/types/database";
+import { ProductAvatar } from "./ProductAvatar";
 
 function buildInviteLink(product: Product): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -31,29 +33,34 @@ export function WaitingCard({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 border border-dashed border-border bg-surface p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-1">
-        <span className="font-mono text-xs font-bold uppercase tracking-wide text-muted">
-          STATUS: WAITING FOR CHALLENGER · {product.category}
-        </span>
-        <a href={`/product/${product.id}`} className="font-display text-lg font-semibold text-ink">
-          {product.name}
-        </a>
-        <p className="text-sm text-muted">{product.pitch}</p>
+    <div className="flex flex-col gap-4 rounded-xl border border-dashed border-accent/40 bg-accent-soft/5 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3">
+        <ProductAvatar name={product.name} accent />
+        <div className="flex flex-col gap-0.5">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
+            <Swords className="h-3.5 w-3.5" />
+            Waiting for a challenger
+          </span>
+          <a href={`/product/${product.id}`} className="font-display text-base font-bold text-ink">
+            {product.name}
+          </a>
+          <p className="text-xs text-muted">
+            {product.category} · {product.pitch}
+          </p>
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <button
           onClick={copyInvite}
-          aria-label="Copy invite link"
-          className="border border-border bg-bg px-3 py-2 text-xs font-bold uppercase tracking-wide text-ink shadow-none transition-transform duration-150 ease-out hover:border-accent active:scale-95"
+          className="rounded-lg border border-border bg-bg px-3 py-2 text-xs font-semibold text-ink shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-95"
         >
           {copied ? "Copied!" : "Copy link"}
         </button>
         <button
           onClick={() => openTwitterIntent(product)}
-          className="border border-border bg-accent px-4 py-2 text-xs font-bold uppercase tracking-wide text-accent-ink shadow-none transition-transform duration-150 ease-out hover:bg-accent-soft active:scale-95"
+          className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-accent-ink shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-95"
         >
-          Invite a rival
+          Invite a Rival
         </button>
       </div>
     </div>

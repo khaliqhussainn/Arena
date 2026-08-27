@@ -165,43 +165,62 @@ supabase/
 
 ### Design system
 
-Flat, non-gradient, brutalist-leaning: solid 1px borders (no soft gray —
-`--border` is literally black in light mode / white in dark, same as the
-text color), zero shadows, zero rounded corners on structural elements,
-`active:scale-95` tactile presses instead of hover glows. Defaults to the
-OS's `prefers-color-scheme`, with a manual toggle (🌙/☀️ button, fixed
-top-right on every page) that overrides it — saved to `localStorage`
-(`arena_theme`), applied via a `data-theme="light"|"dark"` attribute on
-`<html>` set by a small inline script before first paint so there's no
-flash of the wrong theme. Tokens in `src/app/globals.css`:
+Premium, editorial, non-gradient: subtle translucent borders (not stark
+black/white), soft layered shadows (`--shadow-sm/md/lg`), moderate corner
+radius (`rounded-lg`/`rounded-xl`/`rounded-2xl` — no more than a couple of
+full-pill shapes), hover elevation (`-translate-y-0.5` + shadow bump) and
+`active:scale-95` press feedback. Minimal Lucide icons throughout (no
+emoji). Defaults to the OS's `prefers-color-scheme`, with a manual toggle
+(sun/moon button in the sticky header) that overrides it — saved to
+`localStorage` (`arena_theme`), applied via a `data-theme="light"|"dark"`
+attribute on `<html>` set by a small inline script before first paint so
+there's no flash of the wrong theme. Tokens in `src/app/globals.css`:
 
 - Primary surface: white (`#ffffff`) in light mode, black (`#000000`) in
   dark mode — `--bg`, with `--surface`/`--surface-2` as near-neutral card
-  tints and `--ink`/`--muted`/`--border` as the corresponding
-  text/border colors (border == ink, always solid, never gray).
+  tints, `--ink`/`--muted` as text, and `--border`/`--border-strong` as
+  low-opacity hairlines (not solid black/white).
 - Accent: `#00b4d8` (`--accent`) for primary CTAs/active states/vote
   buttons, `#90e0ef` (`--accent-soft`) for secondary fills (badges, tags,
-  the tug-of-war bar's minority side). `--accent-ink` (black) is the fixed
-  text color on accent-colored backgrounds.
-- `--danger` (`#ff3b30`) + `--danger-ink` (white): solid fill for the
-  eliminated ribbon, the near-loss warning border, and the urgent boost
-  CTA — the only non-accent color in the UI, reserved for elimination/
-  critical states.
+  subtle washes). `--accent-ink` (black) is the fixed text color on
+  accent-colored backgrounds. Used deliberately, not everywhere — most of
+  the UI is still black/white/gray.
+- `--danger` (`#ff3b30`) + `--danger-ink` (white): the eliminated ribbon
+  and the near-loss warning ring — the only non-accent color, reserved for
+  elimination/critical states.
+
+**Structure (single-page, anchor-linked nav):** a sticky header
+(`SiteHeader`) with logo, nav links that scroll to `#how-it-works`,
+`#duels`, `#hall-of-fame`, `#about`, a submit-product page.
 
 **Game-feel details worth knowing:**
-- Each duel card shows a shared tug-of-war bar (relative vote share,
-  accent vs. accent-soft) above the two per-side "X/5" counters — the bar
-  communicates momentum, the counters carry the actual race-to-5 mechanic.
-- **Near-loss state**: when a side's opponent hits 4/5 votes, that side
-  gets a solid red border and its boost button flips to an urgent
-  "⚠ $5 BOOST (+2 VOTES)" — the moment-of-truth conversion trigger.
+- Hero has a low-opacity, slow-drifting combat backdrop (`ArenaBackdrop`:
+  CSS-only sword/shield/crosshair silhouettes + a few pulsing sparks) —
+  pure `transform`/`opacity` animation, no particle library.
+- Each duel card (`MatchCard`) shows a per-side progress-to-5 bar, a live
+  pulsing "Live" indicator, and a share action. **Near-loss state**: when
+  a side's opponent hits 4/5 votes, that side gets a soft red ring and its
+  boost button becomes an urgent "one from elimination" call to action.
 - Vote counts pop with a quick slide-up animation on change (a CSS
   keyframe replayed via `key={votes}`, no animation library).
-- Eliminated products render as cards with a diagonal red "ELIMINATED"
-  ribbon (classic corner-ribbon CSS) instead of a plain list row.
-- The waiting-for-a-challenger card's primary CTA opens a pre-filled
-  Twitter/X share intent ("Invite a rival"); copying the raw link is a
-  secondary action next to it.
+- Eliminated products (`EliminatedList`) keep a diagonal red "ELIMINATED"
+  ribbon, softened into the premium card style (rounded, shadowed,
+  slightly faded until hovered).
+- The waiting-for-a-challenger card's primary CTA opens a pre-filled X
+  share intent ("Invite a Rival"); the same component is reused on a lone
+  product's own `/product/[id]` page.
+- `Leaderboard` and the homepage stats row (`StatsRow`) are both backed by
+  real aggregate queries in `getArenaState()` (product/duel/champion
+  counts, votes cast today, top products by current win streak) — nothing
+  on the page is a fabricated number. A per-match countdown and per-
+  category "round number" from the original visual reference were
+  deliberately **not** built: neither has a backing mechanic (matches
+  don't expire on a timer, there's no round-numbering concept), and a
+  fake one would misrepresent how the arena actually works.
+- Sections below the fold (`How it Works`, `Hall of Fame`, `Power Moves`,
+  `About`) fade/slide in on scroll via `ScrollReveal` (`IntersectionObserver`
+  + a CSS keyframe, no library). The core duel/voting section is not
+  scroll-gated, so it's never hidden behind a delay.
 
 ### Polish pass (Phase 5)
 

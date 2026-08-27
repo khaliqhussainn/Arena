@@ -22,10 +22,10 @@ export function CategoryTabs({
           <button
             key={tab}
             onClick={() => onSelect(tab)}
-            className={`border px-4 py-1.5 text-xs font-bold uppercase tracking-wide shadow-none transition-transform duration-150 ease-out active:scale-95 ${
+            className={`rounded-lg border px-4 py-1.5 text-sm font-medium transition-all duration-150 ease-out active:scale-95 ${
               active
-                ? "border-border bg-accent text-accent-ink"
-                : "border-border bg-transparent text-muted hover:text-ink"
+                ? "border-accent bg-accent text-accent-ink shadow-sm"
+                : "border-border bg-transparent text-muted hover:border-border-strong hover:text-ink"
             }`}
           >
             {tab}

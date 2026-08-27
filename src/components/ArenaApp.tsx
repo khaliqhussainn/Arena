@@ -10,6 +10,12 @@ import { HallOfFame } from "./HallOfFame";
 import { EliminatedList } from "./EliminatedList";
 import { ActivityFeed } from "./ActivityFeed";
 import { WaitingCard } from "./WaitingCard";
+import { ArenaBackdrop } from "./ArenaBackdrop";
+import { StatsRow } from "./StatsRow";
+import { HowItWorks } from "./HowItWorks";
+import { Leaderboard } from "./Leaderboard";
+import { PowerMoves } from "./PowerMoves";
+import { ScrollReveal } from "./ScrollReveal";
 
 const POLL_MS = 5000;
 const VOTED_STORAGE_KEY = "arena_voted_matches";
@@ -131,91 +137,166 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
 
   return (
     <main className="flex flex-col">
-      <section className="flex flex-col items-center justify-center gap-8 px-6 py-24 text-center">
-        <span className="border border-border bg-accent-soft px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.3em] text-black">
-          The Arena
-        </span>
-        <h1 className="max-w-3xl font-display text-4xl font-semibold leading-tight text-ink sm:text-6xl">
-          Win three duels. <span className="text-accent">Become champion.</span>
-        </h1>
-        <p className="max-w-xl text-muted">
-          Submit your product for free. Get paired head-to-head against another
-          product in your category. First to 5 votes wins.
-        </p>
+      {/* Hero */}
+      <section className="relative overflow-hidden px-6 pb-14 pt-16 text-center sm:pt-24">
+        <ArenaBackdrop />
+        <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6">
+          <h1 className="font-display text-4xl font-black leading-[1.08] text-ink sm:text-6xl">
+            Products fight.
+            <br />
+            <span className="text-accent">Winners live forever.</span>
+          </h1>
+          <p className="max-w-lg text-base text-muted sm:text-lg">
+            Free to enter. Win 3 duels to become a permanent Hall of Fame champion.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#submit"
+              className="rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-accent-ink shadow-md transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-lg active:scale-95"
+            >
+              Submit Your Product
+            </a>
+            <a
+              href="#duels"
+              className="rounded-lg border border-border bg-surface px-6 py-3 text-sm font-semibold text-ink shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-95"
+            >
+              Explore Arenas
+            </a>
+          </div>
+          <div className="mt-6 flex justify-center">
+            <StatsRow stats={state.stats} />
+          </div>
+        </div>
+      </section>
+
+      {/* Submission form */}
+      <section className="px-6 pb-16">
         <SubmitForm onSubmitted={handleSubmitted} />
       </section>
 
-      <section className="flex flex-col gap-10 px-6 py-12 md:px-10 lg:flex-row lg:items-start">
-        <div className="flex flex-1 flex-col gap-10">
-          {challenge && (
-            <div className="flex items-center justify-between gap-3 border border-border bg-accent-soft px-5 py-3">
-              <p className="text-sm font-medium text-black">
-                <strong>{challenge.from}</strong> is waiting for a challenger in{" "}
-                <strong>{challenge.category}</strong>. Submit your product above to start the
-                duel!
-              </p>
-              <button
-                onClick={() => setChallenge(null)}
-                className="shrink-0 text-sm font-bold text-black transition-transform duration-150 ease-out active:scale-90"
-                aria-label="Dismiss"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-4">
-            <CategoryTabs selected={tab} onSelect={setTab} counts={counts} />
-            {voteError && <p className="text-sm text-danger">{voteError}</p>}
+      {/* How it works */}
+      <ScrollReveal>
+        <section id="how-it-works" className="border-t border-border px-6 py-16 md:px-10">
+          <div className="mx-auto flex max-w-5xl flex-col gap-10">
+            <h2 className="text-center font-display text-2xl font-bold text-ink sm:text-3xl">
+              How The <span className="text-accent">Arena</span> Works
+            </h2>
+            <HowItWorks />
           </div>
+        </section>
+      </ScrollReveal>
 
-          {filtered.waiting.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {filtered.waiting.map((p) => (
-                <WaitingCard key={p.id} product={p} />
-              ))}
+      {/* Duels */}
+      <section id="duels" className="border-t border-border px-6 py-16 md:px-10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 lg:flex-row lg:items-start">
+          <div className="flex flex-1 flex-col gap-8">
+            {challenge && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-accent bg-accent-soft/10 px-5 py-3 shadow-sm">
+                <p className="text-sm text-ink">
+                  <strong>{challenge.from}</strong> is waiting for a challenger in{" "}
+                  <strong>{challenge.category}</strong>. Submit your product above to start the
+                  duel!
+                </p>
+                <button
+                  onClick={() => setChallenge(null)}
+                  className="shrink-0 text-sm text-muted transition-transform duration-150 ease-out hover:text-ink active:scale-90"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              <CategoryTabs selected={tab} onSelect={setTab} counts={counts} />
+              {voteError && <p className="text-sm text-danger">{voteError}</p>}
             </div>
-          )}
 
-          <div className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Live duels</h2>
-            {filtered.matches.length === 0 ? (
-              <p className="text-sm text-muted">
-                No active duels{tab !== "All" ? ` in ${tab}` : ""} right now. Submit a
-                product to start one.
-              </p>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {filtered.matches.map((m) => (
-                  <MatchCard
-                    key={m.id}
-                    match={m}
-                    votedSide={votedMap[m.id]}
-                    voting={pendingVotes.has(m.id)}
-                    onVote={castVote}
-                    onPaid={refreshState}
-                  />
+            {filtered.waiting.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {filtered.waiting.map((p) => (
+                  <WaitingCard key={p.id} product={p} />
                 ))}
               </div>
             )}
+
+            <div className="flex flex-col gap-4">
+              <h2 className="font-display text-xl font-bold text-ink">Live Duels</h2>
+              {filtered.matches.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted">
+                  No active duels{tab !== "All" ? ` in ${tab}` : ""} right now. Submit a
+                  product to start one.
+                </p>
+              ) : (
+                <div className="grid gap-5">
+                  {filtered.matches.map((m) => (
+                    <MatchCard
+                      key={m.id}
+                      match={m}
+                      votedSide={votedMap[m.id]}
+                      voting={pendingVotes.has(m.id)}
+                      onVote={castVote}
+                      onPaid={refreshState}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <h2 className="font-display text-xl font-bold text-ink">Eliminated</h2>
+              <EliminatedList products={filtered.eliminated} onPaid={refreshState} />
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Hall of Fame</h2>
-            <HallOfFame champions={filtered.champions} onPaid={refreshState} />
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <h2 className="font-display text-xl font-semibold text-ink">Eliminated</h2>
-            <EliminatedList products={filtered.eliminated} onPaid={refreshState} />
-          </div>
+          <aside className="flex w-full flex-col gap-6 lg:sticky lg:top-20 lg:w-80">
+            <Leaderboard products={state.topProducts} />
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm">
+              <h2 className="font-display text-sm font-bold text-ink">Activity</h2>
+              <ActivityFeed activity={state.activity} />
+            </div>
+          </aside>
         </div>
-
-        <aside className="flex w-full flex-col gap-4 lg:w-80">
-          <h2 className="font-display text-xl font-semibold text-ink">Activity</h2>
-          <ActivityFeed activity={state.activity} />
-        </aside>
       </section>
+
+      {/* Hall of Fame */}
+      <ScrollReveal>
+        <section id="hall-of-fame" className="border-t border-border px-6 py-16 md:px-10">
+          <div className="mx-auto flex max-w-6xl flex-col gap-6">
+            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
+              Hall of Fame <span className="text-accent">Champions</span>
+            </h2>
+            <HallOfFame champions={state.champions} onPaid={refreshState} />
+          </div>
+        </section>
+      </ScrollReveal>
+
+      {/* Power moves */}
+      <ScrollReveal>
+        <section className="border-t border-border px-6 py-16 md:px-10">
+          <div className="mx-auto flex max-w-5xl flex-col gap-8">
+            <h2 className="text-center font-display text-2xl font-bold text-ink sm:text-3xl">
+              Power Moves <span className="text-base font-normal text-muted">(Optional)</span>
+            </h2>
+            <PowerMoves />
+          </div>
+        </section>
+      </ScrollReveal>
+
+      {/* About */}
+      <ScrollReveal>
+        <section id="about" className="border-t border-border px-6 py-16 text-center">
+          <div className="mx-auto flex max-w-xl flex-col gap-3">
+            <h2 className="font-display text-2xl font-bold text-ink">About The Arena</h2>
+            <p className="text-sm text-muted">
+              The Arena is a free, head-to-head battle platform for products. Submit yours,
+              get paired against a rival in your category, and let real votes decide who
+              wins. Win three duels in a row and your name is added to the Hall of Fame —
+              permanently.
+            </p>
+          </div>
+        </section>
+      </ScrollReveal>
     </main>
   );
 }

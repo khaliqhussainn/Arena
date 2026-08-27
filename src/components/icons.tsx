@@ -1,4 +1,6 @@
-export function CrownIcon({ className }: { className?: string }) {
+import type { CSSProperties } from "react";
+
+export function CrownIcon({ className, style }: { className?: string; style?: CSSProperties }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -8,6 +10,7 @@ export function CrownIcon({ className }: { className?: string }) {
       strokeLinejoin="round"
       strokeLinecap="round"
       className={className}
+      style={style}
       aria-hidden="true"
     >
       <path d="M3 8l4 3 5-6 5 6 4-3-2 10H5L3 8z" />
