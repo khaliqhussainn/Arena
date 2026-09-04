@@ -209,10 +209,18 @@ applicable, and kept in sync by `ThemeToggle` on every manual toggle.
 - Hero has a low-opacity, slow-drifting combat backdrop (`ArenaBackdrop`:
   CSS-only sword/shield/crosshair silhouettes + a few pulsing sparks) —
   pure `transform`/`opacity` animation, no particle library.
-- Each duel card (`MatchCard`) shows a per-side progress-to-5 bar, a live
-  pulsing "Live" indicator, and a share action. **Near-loss state**: when
-  a side's opponent hits 99/100 votes, that side gets a soft red ring and its
-  boost button becomes an urgent "one from elimination" call to action.
+- Each duel card (`MatchCard`) shows both competing products as equal-
+  weight columns (name, logo-style avatar, category, pitch, win streak,
+  vote count + progress bar, its own vote button, its own boost button) —
+  desktop side-by-side, mobile stacked with the VS divider preserved
+  either way. Voting locks both sides at once: the side you picked gets a
+  colored ring, an "✓ Your vote" badge, and a solid "✓ Voted" button; the
+  side you didn't pick fades and its button reads "Not selected" — the
+  vote and the boost button are always visually tied to a specific named
+  product, never ambiguous about which side they belong to. **Near-loss
+  state**: when a side's opponent hits 99/100 votes, that side gets a
+  soft red ring and its boost button becomes an urgent "one from
+  elimination" call to action.
 - Vote counts pop with a quick slide-up animation on change (a CSS
   keyframe replayed via `key={votes}`, no animation library).
 - Eliminated products (`EliminatedList`) keep a diagonal red "ELIMINATED"

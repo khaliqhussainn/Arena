@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import type { MatchWithProducts } from "@/lib/arena-state";
 import type { VoteSide } from "@/types/database";
 import { PayButton } from "./PayButton";
@@ -15,6 +16,8 @@ function SideCard({
   name,
   pitch,
   url,
+  category,
+  winStreak,
   votes,
   side,
   nearLoss,
@@ -29,6 +32,8 @@ function SideCard({
   name: string;
   pitch: string;
   url: string;
+  category: string;
+  winStreak: number;
   votes: number;
   side: VoteSide;
   nearLoss: boolean;
@@ -39,33 +44,54 @@ function SideCard({
   onPaid?: () => void;
 }) {
   const isMyVote = votedSide === side;
+  const isOtherSide = disabled && !isMyVote;
   const pct = Math.min(100, (votes / VOTES_TO_WIN) * 100);
 
-  let label = "Vote";
-  if (isMyVote) label = "Voted for this side";
+  let label = "Vote for this side";
+  if (isMyVote) label = "✓ Voted";
   else if (voting) label = "Voting…";
-  else if (disabled) label = "Voted";
+  else if (isOtherSide) label = "Not selected";
 
   return (
     <div
-      className={`flex flex-1 flex-col gap-3 p-4 transition-shadow duration-150 sm:p-5 ${
-        nearLoss ? "rounded-xl ring-1 ring-danger/60" : ""
+      className={`flex flex-1 flex-col gap-3 p-4 transition-all duration-150 sm:p-5 ${
+        isMyVote ? "rounded-xl bg-accent-soft/10 ring-2 ring-accent" : ""
+      } ${nearLoss && !disabled ? "rounded-xl ring-1 ring-danger/60" : ""} ${
+        isOtherSide ? "opacity-50" : ""
       }`}
     >
-      <div className="flex items-center gap-3">
-        <ProductAvatar name={name} accent={isMyVote} />
-        <div className="flex min-w-0 flex-col">
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
-            className="truncate font-display text-base font-bold text-ink hover:text-accent sm:text-lg"
-          >
-            {name}
-          </a>
-          <p className="hidden truncate text-xs text-muted sm:block">{pitch}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <ProductAvatar name={name} accent={isMyVote} />
+          <div className="flex min-w-0 flex-col">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className="truncate font-display text-base font-bold text-ink hover:text-accent sm:text-lg"
+            >
+              {name}
+            </a>
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              {category}
+            </span>
+          </div>
         </div>
+        {isMyVote && (
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-accent-ink">
+            <Check className="h-3 w-3" />
+            Your vote
+          </span>
+        )}
       </div>
+
+      <p className="line-clamp-2 min-h-[2.2em] text-xs text-muted sm:text-sm">{pitch}</p>
+
+      {winStreak > 0 && (
+        <span className="self-start rounded-full bg-surface-2 px-2 py-0.5 font-mono text-[10px] font-bold text-muted">
+          🔥 {winStreak} win streak
+        </span>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between">
@@ -87,20 +113,22 @@ function SideCard({
         disabled={disabled || voting}
         className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition-all duration-150 ease-out active:scale-95 disabled:active:scale-100 ${
           isMyVote
-            ? "border border-border bg-surface-2 text-muted shadow-none"
-            : "bg-accent text-accent-ink hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40"
+            ? "bg-accent text-accent-ink shadow-none disabled:opacity-100"
+            : isOtherSide
+              ? "border border-border bg-surface-2 text-muted shadow-none"
+              : "bg-accent text-accent-ink hover:-translate-y-0.5 hover:shadow-md disabled:opacity-40"
         }`}
       >
         {label}
       </button>
 
-      {nearLoss ? (
+      {nearLoss && !disabled ? (
         <PayButton
           type="boost"
           productId={productId}
           matchId={matchId}
           onPaid={onPaid}
-          label="Boost +2 votes ($5) — one from elimination"
+          label={`Boost ${name} +2 votes ($5) — one from elimination`}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger/10 px-3 py-2 text-xs font-semibold text-danger shadow-none transition-all duration-150 ease-out hover:bg-danger hover:text-danger-ink active:scale-95"
         />
       ) : (
@@ -109,6 +137,7 @@ function SideCard({
           productId={productId}
           matchId={matchId}
           onPaid={onPaid}
+          label={`Boost ${name} +2 votes ($5)`}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/30 bg-accent-soft/10 px-3 py-2 text-xs font-semibold text-accent shadow-none transition-all duration-150 ease-out hover:bg-accent-soft/20 active:scale-95"
         />
       )}
@@ -142,21 +171,18 @@ export function MatchCard({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-md transition-shadow duration-150 ease-out hover:shadow-lg">
       <div className="flex items-center justify-between border-b border-border px-4 py-2.5 sm:px-5">
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-accent-soft/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-accent">
-            {match.category}
+        <span className="flex items-center gap-1 text-xs font-medium text-muted">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
           </span>
-          <span className="flex items-center gap-1 text-xs font-medium text-muted">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-            </span>
-            Live
-          </span>
-        </div>
+          Live duel
+        </span>
         <ShareButtons url={shareUrl} text={shareText} />
       </div>
 
+      {/* Two equal-weight columns on desktop, stacked with the VS divider
+          preserved on mobile — never just one product's card. */}
       <div className="grid grid-cols-1 divide-y divide-border sm:grid-cols-[1fr_auto_1fr] sm:divide-y-0 sm:divide-x">
         <SideCard
           productId={match.product_a.id}
@@ -164,6 +190,8 @@ export function MatchCard({
           name={match.product_a.name}
           pitch={match.product_a.pitch}
           url={match.product_a.url}
+          category={match.category}
+          winStreak={match.product_a.wins}
           votes={match.votes_a}
           side="a"
           nearLoss={aNearLoss}
@@ -184,6 +212,8 @@ export function MatchCard({
           name={match.product_b.name}
           pitch={match.product_b.pitch}
           url={match.product_b.url}
+          category={match.category}
+          winStreak={match.product_b.wins}
           votes={match.votes_b}
           side="b"
           nearLoss={bNearLoss}
