@@ -16,6 +16,7 @@ import { HowItWorks } from "./HowItWorks";
 import { Leaderboard } from "./Leaderboard";
 import { PowerMoves } from "./PowerMoves";
 import { ScrollReveal } from "./ScrollReveal";
+import { BrandLogo } from "./BrandLogo";
 
 const POLL_MS = 5000;
 const VOTED_STORAGE_KEY = "arena_voted_matches";
@@ -286,8 +287,9 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
       {/* About */}
       <ScrollReveal>
         <section id="about" className="border-t border-border px-6 py-16 text-center">
-          <div className="mx-auto flex max-w-xl flex-col gap-3">
-            <h2 className="font-display text-2xl font-bold text-ink">About The Arena</h2>
+          <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+            <h2 className="sr-only">About The Arena</h2>
+            <BrandLogo variant="wordmark" className="h-14 max-w-full aspect-[1092/756]" />
             <p className="text-sm text-muted">
               The Arena is a free, head-to-head battle platform for products. Submit yours,
               get paired against a rival in your category, and let real votes decide who

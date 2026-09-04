@@ -176,6 +176,18 @@ emoji). Defaults to the OS's `prefers-color-scheme`, with a manual toggle
 attribute on `<html>` set by a small inline script before first paint so
 there's no flash of the wrong theme. Tokens in `src/app/globals.css`:
 
+**Brand mark:** two matted PNG variants of the logo (`public/brand/`) —
+`icon-light-theme.png` (black accent, for the light/white surface) and
+`icon-dark-theme.png` (white accent, for the black surface), same idea for
+the full wordmark. Swapped via `--logo-icon`/`--logo-wordmark` CSS
+variables using the exact same light/dark/override cascade as every other
+color token (`BrandLogo.tsx` just points a `background-image` at the
+variable), so it needs no JS and can't flash the wrong variant. The
+favicon (`public/favicons/`) follows the same idea but can't be done in
+pure CSS — a default light `<link rel="icon">` is set in `layout.tsx`,
+corrected to the dark variant by the same before-paint inline script when
+applicable, and kept in sync by `ThemeToggle` on every manual toggle.
+
 - Primary surface: white (`#ffffff`) in light mode, black (`#000000`) in
   dark mode — `--bg`, with `--surface`/`--surface-2` as near-neutral card
   tints, `--ink`/`--muted` as text, and `--border`/`--border-strong` as

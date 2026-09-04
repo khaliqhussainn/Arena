@@ -8,8 +8,10 @@ import "./globals.css";
 // toggle choice never flashes the wrong theme on load. Runs as the very
 // first thing in <body> — synchronous inline scripts block rendering of
 // what follows until they finish, and document.documentElement always
-// already exists at this point.
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('arena_theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+// already exists at this point. Also corrects the favicon <link> hrefs
+// the same way (see FAVICONS in ThemeToggle.tsx for the post-mount half
+// of this — same two ids, kept in sync on every manual toggle too).
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('arena_theme');var dark=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}if(dark){var a=document.getElementById('favicon-32');if(a)a.href='/favicons/icon-dark-32.png';var b=document.getElementById('favicon-512');if(b)b.href='/favicons/icon-dark-512.png';}}catch(e){}})();`;
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-display",
@@ -40,6 +42,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bricolage.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-bg text-ink font-body">
+        {/* Default (light) favicon — corrected to the dark variant before
+            first paint by THEME_INIT_SCRIPT below when applicable, and kept
+            in sync by ThemeToggle on every manual toggle. */}
+        <link id="favicon-32" rel="icon" type="image/png" sizes="32x32" href="/favicons/icon-light-32.png" />
+        <link id="favicon-512" rel="icon" type="image/png" sizes="512x512" href="/favicons/icon-light-512.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicons/icon-light-180.png" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <SiteHeader />
         {children}

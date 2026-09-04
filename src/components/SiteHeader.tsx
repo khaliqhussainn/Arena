@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Shield, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { BrandLogo } from "./BrandLogo";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -20,7 +21,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-bg/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <Link href="/" className="flex items-center gap-2 font-display text-lg font-bold text-ink">
-          <Shield className="h-5 w-5 text-accent" />
+          <BrandLogo variant="icon" className="h-7 w-7" />
           Arena
         </Link>
 

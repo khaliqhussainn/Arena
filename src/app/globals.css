@@ -18,6 +18,11 @@
   --shadow-md: 0 4px 16px hsl(var(--shadow-color) / 0.08), 0 1px 2px hsl(var(--shadow-color) / 0.06);
   --shadow-lg: 0 12px 32px hsl(var(--shadow-color) / 0.12), 0 2px 6px hsl(var(--shadow-color) / 0.08);
   --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.25), 0 8px 24px rgba(0, 180, 216, 0.12);
+  /* Brand mark — black-accent version reads correctly against this
+     (light) surface. Swapped for the white-accent version in dark mode
+     below so the icon always matches the background it was matted for. */
+  --logo-icon: url("/brand/icon-light-theme.png");
+  --logo-wordmark: url("/brand/wordmark-light-theme.png");
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +39,8 @@
     --shadow-md: 0 4px 20px hsl(var(--shadow-color) / 0.5);
     --shadow-lg: 0 16px 40px hsl(var(--shadow-color) / 0.6);
     --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.3), 0 8px 28px rgba(0, 180, 216, 0.18);
+    --logo-icon: url("/brand/icon-dark-theme.png");
+    --logo-wordmark: url("/brand/wordmark-dark-theme.png");
   }
 }
 
@@ -50,6 +57,8 @@
   --shadow-md: 0 4px 20px hsl(var(--shadow-color) / 0.5);
   --shadow-lg: 0 16px 40px hsl(var(--shadow-color) / 0.6);
   --glow-accent: 0 0 0 1px rgba(0, 180, 216, 0.3), 0 8px 28px rgba(0, 180, 216, 0.18);
+  --logo-icon: url("/brand/icon-dark-theme.png");
+  --logo-wordmark: url("/brand/wordmark-dark-theme.png");
 }
 
 @theme inline {

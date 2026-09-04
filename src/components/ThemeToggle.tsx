@@ -5,6 +5,13 @@ import { Sun, Moon } from "lucide-react";
 
 const STORAGE_KEY = "arena_theme";
 
+function applyFavicon(theme: "light" | "dark") {
+  const icon32 = document.getElementById("favicon-32") as HTMLLinkElement | null;
+  const icon512 = document.getElementById("favicon-512") as HTMLLinkElement | null;
+  if (icon32) icon32.href = `/favicons/icon-${theme}-32.png`;
+  if (icon512) icon512.href = `/favicons/icon-${theme}-512.png`;
+}
+
 export function ThemeToggle({ className }: { className?: string }) {
   // Default matches the CSS default (light) so the very first client
   // render before this effect runs matches the server-rendered markup —
@@ -15,12 +22,15 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTheme(stored);
-    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
-    }
+    const resolved =
+      stored === "light" || stored === "dark"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTheme(resolved);
+    applyFavicon(resolved);
   }, []);
 
   function toggle() {
@@ -28,6 +38,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem(STORAGE_KEY, next);
+    applyFavicon(next);
   }
 
   return (
