@@ -6,7 +6,7 @@ import { PayButton } from "./PayButton";
 import { ProductAvatar } from "./ProductAvatar";
 import { ShareButtons } from "./ShareButtons";
 
-const VOTES_TO_WIN = 5;
+const VOTES_TO_WIN = 100;
 const NEAR_LOSS_THRESHOLD = VOTES_TO_WIN - 1;
 
 function SideCard({

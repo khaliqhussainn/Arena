@@ -3,7 +3,7 @@ import { Rocket, Swords, Users, Crown, Trophy } from "lucide-react";
 const STEPS = [
   { icon: Rocket, title: "Submit Your Product", body: "Add your product to any category. It's 100% free." },
   { icon: Swords, title: "Fight in Duels", body: "You'll be matched randomly with another product." },
-  { icon: Users, title: "Get Votes", body: "Rally the crowd. First to 5 votes wins the duel." },
+  { icon: Users, title: "Get Votes", body: "Rally the crowd. First to 100 votes wins the duel." },
   { icon: Crown, title: "Win 3 in a Row", body: "Achieve 3 consecutive wins to become champion." },
   { icon: Trophy, title: "Live Forever", body: "Your name is added to the Hall of Fame." },
 ];

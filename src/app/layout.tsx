@@ -30,7 +30,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "The Arena — Win three duels. Become champion.",
   description:
-    "Submit your product for free and battle head-to-head against other products in your category. First to 5 votes wins. Win 3 in a row, become the Champion.",
+    "Submit your product for free and battle head-to-head against other products in your category. First to 100 votes wins. Win 3 in a row, become the Champion.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

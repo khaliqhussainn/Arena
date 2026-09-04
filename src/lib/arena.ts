@@ -5,7 +5,7 @@ import type { Category, Database, Match, Product } from "@/types/database";
 type AdminClient = SupabaseClient<Database>;
 
 const WINS_TO_CHAMPION = 3;
-const VOTES_TO_WIN = 5;
+const VOTES_TO_WIN = 100;
 const UNCONTESTED_ADVANCE_MS = 24 * 60 * 60 * 1000;
 
 export async function logActivity(admin: AdminClient, text: string) {

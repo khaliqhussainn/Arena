@@ -1,7 +1,7 @@
 ## The Arena
 
 Product battle platform: submit a product for free, get auto-paired head-to-head
-against another product in your category, first to 5 votes wins. Win 3 duels in a
+against another product in your category, first to 100 votes wins. Win 3 duels in a
 row and become the category's permanent Champion.
 
 ### Stack
@@ -103,7 +103,7 @@ supabase/
   enforcement of "1 vote per visitor per duel," not just client-side UI
   state. A lightweight in-memory IP rate limiter also caps request bursts
   (best-effort only — resets on cold start, not shared across instances).
-- Reaching 5 votes on a side resolves the match: the winner's streak
+- Reaching 100 votes on a side resolves the match: the winner's streak
   increments (crowning a Champion at 3 in a row) and the loser is
   eliminated. The winner is then re-entered into the pairing pool unless
   they were just crowned.
@@ -199,7 +199,7 @@ there's no flash of the wrong theme. Tokens in `src/app/globals.css`:
   pure `transform`/`opacity` animation, no particle library.
 - Each duel card (`MatchCard`) shows a per-side progress-to-5 bar, a live
   pulsing "Live" indicator, and a share action. **Near-loss state**: when
-  a side's opponent hits 4/5 votes, that side gets a soft red ring and its
+  a side's opponent hits 99/100 votes, that side gets a soft red ring and its
   boost button becomes an urgent "one from elimination" call to action.
 - Vote counts pop with a quick slide-up animation on change (a CSS
   keyframe replayed via `key={votes}`, no animation library).
