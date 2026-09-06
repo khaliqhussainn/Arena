@@ -31,8 +31,11 @@ row and become the category's permanent Champion.
      `0002_functions.sql` adds `cast_vote(...)`, a Postgres function that
      atomically records a vote and increments the match's counter.
      `0003_uncontested.sql` adds the columns behind the waiting-for-a-
-     challenger/uncontested-advance feature. `0004_boost.sql` adds
-     `boost_votes(...)`, the same atomic-increment pattern for paid boosts.
+     challenger feature. `0004_boost.sql` adds `boost_votes(...)`, the same
+     atomic-increment pattern for paid boosts. `0005_unique_products.sql`
+     adds the `unique` product status and corrects any wins/streaks/champion
+     crownings that were previously (incorrectly) granted just for going
+     uncontested — see "How wins and the leaderboard work" below.
    - Grab your Project URL, `anon` public key, and `service_role` secret key
      from Project Settings → API.
 
@@ -111,11 +114,38 @@ supabase/
   "Waiting for a challenger" with a one-tap copyable invite link
   (`/?join=<category>&from=<name>`) that pre-selects that category and
   shows a banner when someone follows it — the intended growth loop for a
-  lone early submitter. If still uncontested 24h after they last entered
-  the pool, they auto-advance with a win (marked "uncontested" in the
-  activity feed and, if it makes them Champion, noted honestly on their
-  Hall of Fame card). There's no cron for this — it's checked lazily on
-  every `/api/state` fetch, which the client already polls every 5s.
+  lone early submitter.
+
+#### How wins and the leaderboard work
+
+A product's `wins`/streak can ONLY be incremented in one place:
+`applyWin()` in `src/lib/arena.ts`, called from `resolveMatchIfComplete()`
+after one side of a real, live duel actually reaches the 100-vote
+threshold. No other code path touches `wins`.
+
+- **Waiting for Challenger** — a newly submitted (or freshly re-paired)
+  product with no rival yet. `wins` stays untouched, and it's excluded from
+  the Leaderboard.
+- **No rival after 7 days** — previously this silently granted a "win" for
+  simply waiting (the old 24h uncontested-advance). That's gone. Now the
+  product is just marked `unique` ("Unique Product") — still fully
+  challengeable via the same invite link, still shown publicly, but
+  `wins`/streak are never touched and it never appears on the Leaderboard.
+  The moment a rival becomes available, `pairUnmatchedProducts()` pairs it
+  into a real duel and flips it back to `active`.
+- **Live duel** — while a duel is in progress, neither side's `wins` changes
+  and neither is shown as a "winner," no matter the current vote lead.
+- **Completed duel** — the only way to actually earn a win: reach the vote
+  threshold before the opponent. The winner's streak increments (crowning a
+  Champion at 3 in a row); the loser is eliminated with streak reset to 0.
+
+The Leaderboard (`Leaderboard.tsx`, backed by `topProducts` in
+`getArenaState()`) only ever queries products with `wins > 0`, so it can
+only ever show real, completed-duel win streaks — never waiting time,
+uncontested status, or a live vote lead.
+
+There's no cron for the 7-day check — it's checked lazily on every
+`/api/state` fetch, which the client already polls every 5s.
 
 ### How payments work (Phase 3)
 

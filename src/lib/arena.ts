@@ -6,24 +6,26 @@ type AdminClient = SupabaseClient<Database>;
 
 const WINS_TO_CHAMPION = 3;
 const VOTES_TO_WIN = 100;
-const UNCONTESTED_ADVANCE_MS = 24 * 60 * 60 * 1000;
+const UNIQUE_PRODUCT_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function logActivity(admin: AdminClient, text: string) {
   await admin.from("activity_log").insert({ text });
 }
 
 /**
- * Pairs up any active, currently-unmatched products within a category.
- * Runs after every submission and after every match resolution, so the
- * pool never sits idle with 2+ waiting products.
+ * Pairs up any currently-unmatched products within a category — both
+ * regular "active" (still-waiting) products and "unique" ones (products
+ * that already went uncontested past the 7-day window but remain
+ * challengeable). Runs after every submission and after every match
+ * resolution, so the pool never sits idle with 2+ waiting products.
  */
 export async function pairUnmatchedProducts(admin: AdminClient, category: Category) {
-  const [{ data: activeProducts }, { data: activeMatches }] = await Promise.all([
+  const [{ data: poolProducts }, { data: activeMatches }] = await Promise.all([
     admin
       .from("products")
       .select("*")
       .eq("category", category)
-      .eq("status", "active")
+      .in("status", ["active", "unique"])
       .order("submitted_at", { ascending: true }),
     admin
       .from("matches")
@@ -38,7 +40,7 @@ export async function pairUnmatchedProducts(admin: AdminClient, category: Catego
     matchedIds.add(m.product_b_id);
   }
 
-  const waiting = (activeProducts ?? []).filter((p) => !matchedIds.has(p.id));
+  const waiting = (poolProducts ?? []).filter((p) => !matchedIds.has(p.id));
 
   while (waiting.length >= 2) {
     const a = waiting.shift() as Product;
@@ -54,6 +56,14 @@ export async function pairUnmatchedProducts(admin: AdminClient, category: Catego
     });
 
     if (!error) {
+      // A real duel is starting — neither side is "uncontested" anymore,
+      // so any product coming out of the 'unique' bucket goes back to
+      // 'active' the moment it's actually matched.
+      await admin
+        .from("products")
+        .update({ status: "active" })
+        .in("id", [a.id, b.id])
+        .eq("status", "unique");
       await logActivity(admin, `⚔️ New duel in ${category}: ${a.name} vs ${b.name}`);
     }
   }
@@ -62,19 +72,20 @@ export async function pairUnmatchedProducts(admin: AdminClient, category: Catego
 /**
  * Grants a win to `winner`: advances their streak, crowns them Champion at
  * 3 in a row, or — if not yet a champion — leaves them active and resets
- * their pool clock so a fresh 24h uncontested-advance window starts. Shared
- * by real match resolution and the uncontested-advance path below; the
- * `uncontested` flag only affects bookkeeping (activity copy, the
- * `uncontested_wins` counter) never the win-counting rule itself.
+ * their pool clock so they re-enter pairing for a fresh duel. This is the
+ * ONLY function that increments `wins`, and it is only ever called from
+ * `resolveMatchIfComplete` below, after one side has actually reached the
+ * vote threshold in a real, completed duel — never for waiting, uncontested,
+ * or currently-live-but-unresolved products.
  */
 async function applyWin(
   admin: AdminClient,
   winner: Product,
   category: Category,
-  opts: { uncontested: boolean; loser?: Product; votesLine?: string },
+  opts: { loser: Product; votesLine: string },
 ) {
   const newWins = winner.wins + 1;
-  const newUncontested = winner.uncontested_wins + (opts.uncontested ? 1 : 0);
+  const line = `beating ${opts.loser.name} ${opts.votesLine}`;
 
   if (newWins >= WINS_TO_CHAMPION) {
     await admin
@@ -82,15 +93,9 @@ async function applyWin(
       .update({
         status: "champion",
         wins: newWins,
-        uncontested_wins: newUncontested,
         is_defending: false,
       })
       .eq("id", winner.id);
-
-    const suffix = opts.uncontested ? " (advanced uncontested)" : "";
-    const line = opts.loser
-      ? `beating ${opts.loser.name} ${opts.votesLine}`
-      : "after no challenger appeared";
 
     if (winner.is_defending) {
       // Extending an existing reign, not a fresh crowning.
@@ -109,7 +114,7 @@ async function applyWin(
       }
       await logActivity(
         admin,
-        `🛡️ ${winner.name} has successfully defended the throne in ${category}, ${line}${suffix}!`,
+        `🛡️ ${winner.name} has successfully defended the throne in ${category}, ${line}!`,
       );
     } else {
       await admin.from("champions").insert({
@@ -119,7 +124,7 @@ async function applyWin(
       });
       await logActivity(
         admin,
-        `🏆 ${winner.name} has been crowned Champion of ${category}, ${line}${suffix}!`,
+        `🏆 ${winner.name} has been crowned Champion of ${category}, ${line}!`,
       );
     }
   } else {
@@ -127,21 +132,13 @@ async function applyWin(
       .from("products")
       .update({
         wins: newWins,
-        uncontested_wins: newUncontested,
         pool_entered_at: new Date().toISOString(),
       })
       .eq("id", winner.id);
-    if (opts.uncontested) {
-      await logActivity(
-        admin,
-        `🎖️ ${winner.name} advances uncontested in ${category} after 24h with no challenger (win streak: ${newWins})`,
-      );
-    } else {
-      await logActivity(
-        admin,
-        `${winner.name} beat ${opts.loser?.name} ${opts.votesLine} in ${category} (win streak: ${newWins})`,
-      );
-    }
+    await logActivity(
+      admin,
+      `${winner.name} beat ${opts.loser.name} ${opts.votesLine} in ${category} (win streak: ${newWins})`,
+    );
   }
 }
 
@@ -183,20 +180,26 @@ export async function resolveMatchIfComplete(admin: AdminClient, match: Match) {
   await logActivity(admin, `${loser.name} has been eliminated`);
 
   const votesLine = `${Math.max(match.votes_a, match.votes_b)}-${Math.min(match.votes_a, match.votes_b)}`;
-  await applyWin(admin, winner, match.category, { uncontested: false, loser, votesLine });
+  await applyWin(admin, winner, match.category, { loser, votesLine });
 
   await pairUnmatchedProducts(admin, match.category);
 }
 
 /**
- * Auto-advances any product that has sat alone in its category's pool for
- * 24h+ with no challenger. There's no cron here — this runs lazily on every
- * arena state fetch (page load + the client's poll), which is frequent
- * enough that the 24h mark is crossed within seconds of the deadline in
- * practice, without needing any scheduled-job infra.
+ * Marks any product that has sat alone in its category's pool for 7 days+
+ * with no challenger as a "Unique Product" — NOT a win, NOT a streak
+ * increment, NOT a leaderboard entry. It stays fully challengeable: the next
+ * time `pairUnmatchedProducts` runs for its category (e.g. a new submission
+ * arrives) it's eligible to be paired into a real duel again, at which point
+ * it flips back to "active" and is no longer treated as uncontested.
+ *
+ * There's no cron here — this runs lazily on every arena state fetch (page
+ * load + the client's poll), which is frequent enough that the 7-day mark is
+ * crossed within seconds of the deadline in practice, without needing any
+ * scheduled-job infra.
  */
-export async function autoAdvanceStaleWaitingProducts(admin: AdminClient) {
-  const cutoff = new Date(Date.now() - UNCONTESTED_ADVANCE_MS).toISOString();
+export async function markStaleWaitingProductsUnique(admin: AdminClient) {
+  const cutoff = new Date(Date.now() - UNIQUE_PRODUCT_MS).toISOString();
 
   const [{ data: staleActive }, { data: activeMatches }] = await Promise.all([
     admin
@@ -216,16 +219,13 @@ export async function autoAdvanceStaleWaitingProducts(admin: AdminClient) {
     matchedIds.add(m.product_b_id);
   }
 
-  const touchedCategories = new Set<Category>();
-
   for (const product of staleActive) {
-    if (matchedIds.has(product.id)) continue; // shouldn't happen, but never advance a matched product
-    await applyWin(admin, product, product.category, { uncontested: true });
-    touchedCategories.add(product.category);
-  }
-
-  for (const category of touchedCategories) {
-    await pairUnmatchedProducts(admin, category);
+    if (matchedIds.has(product.id)) continue; // shouldn't happen, but never touch a matched product
+    await admin.from("products").update({ status: "unique" }).eq("id", product.id);
+    await logActivity(
+      admin,
+      `🦄 ${product.name} found no challenger in ${product.category} after 7 days — marked as a Unique Product (still open to a challenge, no win awarded)`,
+    );
   }
 }
 

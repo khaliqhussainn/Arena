@@ -18,7 +18,13 @@ function openTwitterIntent(product: Product) {
   window.open(intentUrl, "_blank", "noopener,noreferrer,width=550,height=420");
 }
 
-export function WaitingCard({ product }: { product: Product }) {
+export function WaitingCard({
+  product,
+  variant = "waiting",
+}: {
+  product: Product;
+  variant?: "waiting" | "unique";
+}) {
   const [copied, setCopied] = useState(false);
 
   async function copyInvite() {
@@ -39,7 +45,7 @@ export function WaitingCard({ product }: { product: Product }) {
         <div className="flex flex-col gap-0.5">
           <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-accent">
             <Swords className="h-3.5 w-3.5" />
-            Waiting for a challenger
+            {variant === "unique" ? "Unique Product · Uncontested" : "Waiting for a challenger"}
           </span>
           <a href={`/product/${product.id}`} className="font-display text-base font-bold text-ink">
             {product.name}
@@ -47,6 +53,11 @@ export function WaitingCard({ product }: { product: Product }) {
           <p className="text-xs text-muted">
             {product.category} · {product.pitch}
           </p>
+          {variant === "unique" && (
+            <p className="text-xs text-muted">
+              No rival showed up within 7 days — still open to a challenge, no win awarded.
+            </p>
+          )}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -60,7 +71,7 @@ export function WaitingCard({ product }: { product: Product }) {
           onClick={() => openTwitterIntent(product)}
           className="rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-accent-ink shadow-sm transition-all duration-150 ease-out hover:-translate-y-0.5 hover:shadow-md active:scale-95"
         >
-          Invite a Rival
+          {variant === "unique" ? "Challenge This Product" : "Invite a Rival"}
         </button>
       </div>
     </div>

@@ -125,6 +125,7 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
     return {
       matches: inCategory(state.matches),
       waiting: inCategory(state.waiting),
+      unique: inCategory(state.unique),
       eliminated: inCategory(state.eliminated),
       champions: inCategory(state.champions),
     };
@@ -218,6 +219,21 @@ export function ArenaApp({ initialState }: { initialState: ArenaState }) {
                 {filtered.waiting.map((p) => (
                   <WaitingCard key={p.id} product={p} />
                 ))}
+              </div>
+            )}
+
+            {filtered.unique.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <h2 className="font-display text-xl font-bold text-ink">Unique Products</h2>
+                <p className="-mt-2 text-sm text-muted">
+                  No rival showed up within 7 days — these products haven&apos;t won anything yet
+                  and stay off the leaderboard, but they&apos;re still open to a challenge.
+                </p>
+                <div className="flex flex-col gap-3">
+                  {filtered.unique.map((p) => (
+                    <WaitingCard key={p.id} product={p} variant="unique" />
+                  ))}
+                </div>
               </div>
             )}
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getArenaState } from "@/lib/arena-state";
-import { resolveMatchIfComplete, autoAdvanceStaleWaitingProducts } from "@/lib/arena";
+import { resolveMatchIfComplete, markStaleWaitingProductsUnique } from "@/lib/arena";
 import {
   FINGERPRINT_COOKIE,
   fingerprintCookieOptions,
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   if (match) {
     await resolveMatchIfComplete(admin, match);
   }
-  await autoAdvanceStaleWaitingProducts(admin);
+  await markStaleWaitingProductsUnique(admin);
 
   const state = await getArenaState(admin);
   const res = NextResponse.json({ state });

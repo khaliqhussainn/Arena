@@ -15,6 +15,7 @@ export interface HomeStats {
 export interface ArenaState {
   matches: MatchWithProducts[];
   waiting: Product[];
+  unique: Product[];
   eliminated: Product[];
   champions: ChampionWithProduct[];
   topProducts: Product[];
@@ -31,6 +32,7 @@ export async function getArenaState(
   const [
     matchesRes,
     activeProductsRes,
+    uniqueProductsRes,
     eliminatedRes,
     championsRes,
     topProductsRes,
@@ -50,6 +52,11 @@ export async function getArenaState(
     supabase
       .from("products")
       .select("*")
+      .eq("status", "unique")
+      .order("pool_entered_at", { ascending: true }),
+    supabase
+      .from("products")
+      .select("*")
       .eq("status", "eliminated")
       .order("submitted_at", { ascending: false })
       .limit(50),
@@ -57,10 +64,17 @@ export async function getArenaState(
       .from("champions")
       .select("*, product:products!champions_product_id_fkey(*)")
       .order("crowned_at", { ascending: false }),
+    // Win Streak Leaders: only products that have actually won at least one
+    // completed, voted duel. Waiting/unique products always sit at wins = 0
+    // and are excluded by the `.gt` filter below, and a product currently
+    // mid-duel keeps whatever streak it earned from past *completed* duels
+    // only — a live duel's vote tally never touches `wins` until it resolves
+    // (see resolveMatchIfComplete/applyWin in lib/arena.ts).
     supabase
       .from("products")
       .select("*")
       .in("status", ["active", "champion"])
+      .gt("wins", 0)
       .order("wins", { ascending: false })
       .limit(8),
     supabase
@@ -87,11 +101,16 @@ export async function getArenaState(
     matchedIds.add(m.product_b_id);
   }
   const waiting = (activeProductsRes.data ?? []).filter((p) => !matchedIds.has(p.id));
+  // Defensive: a 'unique' product is only ever matched for the instant
+  // between pairUnmatchedProducts inserting the match and flipping its
+  // status back to 'active', but never show it as both live and uncontested.
+  const unique = (uniqueProductsRes.data ?? []).filter((p) => !matchedIds.has(p.id));
   const champions = (championsRes.data ?? []) as unknown as ChampionWithProduct[];
 
   return {
     matches,
     waiting,
+    unique,
     eliminated: eliminatedRes.data ?? [],
     champions,
     topProducts: topProductsRes.data ?? [],
@@ -119,6 +138,7 @@ export interface ProductDetail {
   history: ProductHistoryEntry[];
   currentMatch: MatchWithProducts | null;
   isWaiting: boolean;
+  isUnique: boolean;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -182,5 +202,6 @@ export async function getProductDetail(
     history,
     currentMatch,
     isWaiting: product.status === "active" && !currentMatch,
+    isUnique: product.status === "unique" && !currentMatch,
   };
 }

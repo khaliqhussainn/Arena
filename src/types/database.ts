@@ -10,7 +10,7 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
-export type ProductStatus = "active" | "eliminated" | "champion";
+export type ProductStatus = "active" | "eliminated" | "champion" | "unique";
 export type MatchStatus = "active" | "resolved";
 export type VoteSide = "a" | "b";
 export type PaymentType = "boost" | "revive" | "defend";

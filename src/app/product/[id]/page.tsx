@@ -19,12 +19,14 @@ const STATUS_LABEL: Record<ProductStatus, string> = {
   active: "Active",
   eliminated: "Eliminated",
   champion: "Champion",
+  unique: "Unique Product",
 };
 
 const STATUS_CLASS: Record<ProductStatus, string> = {
   active: "bg-accent-soft/20 text-accent",
   eliminated: "bg-danger/10 text-danger",
   champion: "bg-accent text-accent-ink",
+  unique: "bg-surface-2 text-muted",
 };
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,7 +35,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const detail = await getProductDetail(admin, id);
   if (!detail) notFound();
 
-  const { product, champion, history, currentMatch, isWaiting } = detail;
+  const { product, champion, history, currentMatch, isWaiting, isUnique } = detail;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const productUrl = `${siteUrl}/product/${product.id}`;
 
@@ -89,6 +91,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="flex flex-col gap-3">
           <h2 className="font-display text-xl font-bold text-ink">Status</h2>
           <WaitingCard product={product} />
+        </div>
+      )}
+
+      {isUnique && (
+        <div className="flex flex-col gap-3">
+          <h2 className="font-display text-xl font-bold text-ink">Status</h2>
+          <WaitingCard product={product} variant="unique" />
         </div>
       )}
 
