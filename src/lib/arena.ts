@@ -238,7 +238,7 @@ export async function markStaleWaitingProductsUnique(admin: AdminClient) {
 export async function applyRevive(admin: AdminClient, product: Product) {
   // Conditional on still being eliminated: guards against a delayed/retried
   // webhook re-applying after the product's state has already moved on.
-  const { data: updated } = await admin
+  const { data: updated, error } = await admin
     .from("products")
     .update({
       status: "active",
@@ -250,6 +250,11 @@ export async function applyRevive(admin: AdminClient, product: Product) {
     .eq("status", "eliminated")
     .select()
     .maybeSingle();
+  // A real DB error here must not be mistaken for "already active" — that
+  // silently drops a paid revive with no trace. Throwing lets the webhook
+  // handler leave the payment "pending" so LemonSqueezy's retry can finish
+  // the job instead of the grant being lost forever.
+  if (error) throw error;
   if (!updated) return;
 
   await logActivity(
@@ -262,7 +267,7 @@ export async function applyRevive(admin: AdminClient, product: Product) {
 export async function applyDefend(admin: AdminClient, product: Product) {
   // Conditional on still being a non-defending champion: same delayed-
   // webhook guard as applyRevive.
-  const { data: updated } = await admin
+  const { data: updated, error } = await admin
     .from("products")
     .update({
       status: "active",
@@ -275,6 +280,8 @@ export async function applyDefend(admin: AdminClient, product: Product) {
     .eq("is_defending", false)
     .select()
     .maybeSingle();
+  // See applyRevive: a real error is not the same as "already defending."
+  if (error) throw error;
   if (!updated) return;
 
   await logActivity(
@@ -287,24 +294,36 @@ export async function applyDefend(admin: AdminClient, product: Product) {
 const BOOST_VOTES = 2;
 
 export async function applyBoost(admin: AdminClient, matchId: string, productId: string) {
-  const { data: match } = await admin
+  const { data: match, error: matchError } = await admin
     .from("matches")
     .select("*")
     .eq("id", matchId)
     .eq("status", "active")
     .maybeSingle();
+  // A real error (network hiccup, RLS, whatever) must never be treated the
+  // same as "no such active match" — that was the actual bug: a paid boost
+  // could silently vanish with zero trace of anything having gone wrong.
+  // Throwing here lets the webhook handler leave the payment "pending" so
+  // LemonSqueezy's automatic retry actually finishes applying it.
+  if (matchError) throw matchError;
   if (!match) return; // the duel already ended before payment confirmed — nothing to apply
 
   const side = match.product_a_id === productId ? "a" : match.product_b_id === productId ? "b" : null;
   if (!side) return;
 
-  const { data: boosted } = await admin.rpc("boost_votes", {
+  const { data: boosted, error: boostError } = await admin.rpc("boost_votes", {
     p_match_id: matchId,
     p_side: side,
     p_amount: BOOST_VOTES,
   });
+  if (boostError) throw boostError;
 
-  const { data: product } = await admin.from("products").select("*").eq("id", productId).maybeSingle();
+  const { data: product, error: productError } = await admin
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .maybeSingle();
+  if (productError) throw productError;
   if (product) {
     await logActivity(admin, `⚡ ${product.name} got boosted +${BOOST_VOTES} votes in ${match.category}`);
   }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -15,6 +16,7 @@ import { BattlePitch } from "@/components/BattlePitch";
 import { ProductEditor } from "@/components/ProductEditor";
 import { timeAgo } from "@/lib/format";
 import { STATUS_LABEL, STATUS_CLASS } from "@/lib/product-status";
+import { resolveSiteUrl } from "@/lib/site-url";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,10 @@ export default async function ProductPage({
   if (!detail) notFound();
 
   const { product, champion, history, currentMatch, isWaiting, isUnique } = detail;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const proto = requestHeaders.get("x-forwarded-proto") ?? "https";
+  const siteUrl = resolveSiteUrl(host ? `${proto}://${host}` : undefined);
   const productUrl = `${siteUrl}/product/${product.id}`;
 
   return (

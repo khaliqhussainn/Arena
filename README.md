@@ -220,6 +220,21 @@ There's no cron for the 7-day check — it's checked lazily on every
   event. The `payments` table's unique constraint on
   `lemonsqueezy_order_id` makes this idempotent against webhook retries —
   a duplicate delivery is a no-op, not a double-grant.
+  - **Retry-safe grant application**: a payment is inserted as `"pending"`
+    *before* the grant is applied, and only flipped to `"completed"` after
+    `applyBoost`/`applyRevive`/`applyDefend` succeeds. If applying the
+    grant throws, the handler returns a non-2xx status so LemonSqueezy
+    retries the delivery, and the retry resumes from the existing
+    `"pending"` row instead of treating the order as already handled. Only
+    a `"completed"` row short-circuits a redelivery. Those three functions
+    also now throw on a real Supabase/RPC error instead of silently
+    no-oping — a paid boost/revive/defend can no longer vanish with zero
+    trace if a DB call transiently fails.
+  - `NEXT_PUBLIC_SITE_URL` (used for the checkout redirect, share links,
+    and the badge) now falls back to the actual incoming request's origin
+    (`lib/site-url.ts`) instead of a hardcoded `http://localhost:3000` — a
+    missing/stale env var in production can no longer silently send a
+    real visitor's post-checkout redirect to localhost.
 - Boost re-derives which side of the match to credit from the match row
   itself (never trusts a client-supplied side) and applies via a
   `boost_votes()` Postgres function — same atomic-increment pattern as

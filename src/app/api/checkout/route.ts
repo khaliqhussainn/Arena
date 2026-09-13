@@ -3,6 +3,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createCheckout, getVariantId } from "@/lib/lemonsqueezy";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/fingerprint";
+import { resolveSiteUrl } from "@/lib/site-url";
 import type { PaymentType } from "@/types/database";
 
 export async function POST(req: NextRequest) {
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Payments aren't configured yet." }, { status: 503 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = resolveSiteUrl(req.nextUrl.origin);
   const custom: Record<string, string> = { type, product_id: productId };
   if (typeof matchId === "string") custom.match_id = matchId;
 

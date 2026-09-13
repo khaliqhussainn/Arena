@@ -7,19 +7,20 @@ function escapeXml(s: string): string {
   );
 }
 
-function renderBadgeSvg(name: string, category: string): string {
+function renderBadgeSvg(name: string, category: string, host: string): string {
   const safeName = escapeXml(name.length > 22 ? `${name.slice(0, 21)}…` : name);
   const safeCategory = escapeXml(category);
+  const safeHost = escapeXml(host);
   return `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="64" viewBox="0 0 220 64" role="img" aria-label="Arena Champion badge">
   <rect width="220" height="64" fill="#0d0d0d" stroke="#00b4d8" stroke-width="1.5"/>
   <path d="M12 20l4 3 5-6 5 6 4-3-2 10H14L12 20z" fill="none" stroke="#00b4d8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
   <text x="40" y="26" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12" font-weight="700" letter-spacing="0.5" fill="#ffffff">ARENA CHAMPION</text>
   <text x="16" y="46" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="11" fill="#90e0ef">${safeName} · ${safeCategory}</text>
-  <text x="16" y="58" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="9" fill="#6b7280">the-arena.app</text>
+  <text x="16" y="58" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="9" fill="#6b7280">${safeHost}</text>
 </svg>`;
 }
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const admin = createAdminSupabaseClient();
   const { data: product } = await admin.from("products").select("name, category, status").eq("id", id).maybeSingle();
@@ -28,7 +29,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return new NextResponse("Not a champion", { status: 404 });
   }
 
-  const svg = renderBadgeSvg(product.name, product.category);
+  // The badge is embedded on third-party sites, so its "issued by" text
+  // must reflect the real domain it's served from rather than a
+  // hardcoded/stale one — derived the same way as the site URL fallback
+  // elsewhere (see lib/site-url.ts), preferring the configured site URL.
+  const host = (process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin).replace(/^https?:\/\//, "");
+  const svg = renderBadgeSvg(product.name, product.category, host);
   return new NextResponse(svg, {
     headers: {
       "Content-Type": "image/svg+xml",
